@@ -1,0 +1,25 @@
+package com.ecommerce.ecommerce.config.mail;
+
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+
+@Configuration
+public class MailConfig {
+    @Bean
+    public static SimpleMailMessage templateSimpleMessage () {
+        SimpleMailMessage message = new SimpleMailMessage();
+
+        message.setText("""
+            Xin chào %s,
+
+            Đơn hàng %s đã thành công 🎉
+            Tổng tiền: %s
+
+            Cảm ơn bạn đã mua sắm
+            """);
+        return message;
+    }
+}
