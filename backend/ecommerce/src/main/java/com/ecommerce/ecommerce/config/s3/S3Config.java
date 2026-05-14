@@ -16,6 +16,6 @@ public class S3Config {
     // initialize the s3Amazon Client
     @Bean
     public S3Client s3Client() {
-        return S3Client.builder().region(Region.of(region)).credentialsProvider(ProfileCredentialsProvider.builder().profileName("default").build()).build();
+        return S3Client.builder().region(Region.AP_SOUTHEAST_1).build();
     }
 }

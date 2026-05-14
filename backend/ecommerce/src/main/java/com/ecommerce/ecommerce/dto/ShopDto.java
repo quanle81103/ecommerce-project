@@ -26,7 +26,7 @@ public abstract class ShopDto {
         private String name;
 
         private String description;
-        private String logoUrl;
+//        private String logoUrl;
 
         @NotNull
         private Long userId;
