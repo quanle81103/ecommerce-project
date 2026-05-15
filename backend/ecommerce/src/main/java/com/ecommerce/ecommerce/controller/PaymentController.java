@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("${api.prefix}/payment")
 @RequiredArgsConstructor
@@ -24,14 +26,22 @@ public class PaymentController {
     }
 
     // IPN: VNPay server gọi để cập nhật DB
+//    @GetMapping("/vnpay-ipn")
+//    public ResponseObject<PaymentDto.VnPayResponse> ipnHandler(HttpServletRequest request) {
+//        String code = request.getParameter("vnp_ResponseCode");
+//        if (code.equals("00")) {
+//            return new ResponseObject<>(HttpStatus.OK, "Success", paymentService.processVnpayIpn(request));
+//        } else {
+//            return new ResponseObject<>(HttpStatus.BAD_REQUEST, "Failed", null);
+//        }
+//    }
+
     @GetMapping("/vnpay-ipn")
-    public ResponseObject<PaymentDto.VnPayResponse> ipnHandler(HttpServletRequest request) {
-        String code = request.getParameter("vnp_ResponseCode");
-        if (code.equals("00")) {
-            return new ResponseObject<>(HttpStatus.OK, "Success", paymentService.processVnpayIpn(request));
-        } else {
-            return new ResponseObject<>(HttpStatus.BAD_REQUEST, "Failed", null);
-        }
+    public Map<String, String> ipnHandler(HttpServletRequest request) {
+        PaymentDto.VnPayResponse response = paymentService.processVnpayIpn(request);
+        return Map.of(
+            "RspCode", response.code, "Message", response.message
+        );
     }
 
     // Return URL: redirect browser sau khi thanh toán

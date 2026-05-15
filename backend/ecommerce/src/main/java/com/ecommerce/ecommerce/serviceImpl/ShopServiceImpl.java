@@ -115,5 +115,4 @@ public class ShopServiceImpl implements ShopService {
         shopRepository.save(shop);
     }
 
-
 }
