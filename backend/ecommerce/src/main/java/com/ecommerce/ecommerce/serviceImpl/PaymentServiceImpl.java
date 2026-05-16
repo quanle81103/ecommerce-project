@@ -60,10 +60,6 @@ public class PaymentServiceImpl {
     private final ObjectMapper objectMapper;
     private final ShippingOrderRepository shippingOrderRepository;
     private final ProductRepository productRepository;
-    @PostConstruct
-    public void init() {
-        VnPayUtil.hashSecret = vnPayConfig.getHashSecret();
-    }
     // request sent from Backend Server side -> Vnpay
     public PaymentDto.VnPayResponse createVnPayPayment(HttpServletRequest request) throws ServletException {
 //        String userId = request.getParameter("userId");
