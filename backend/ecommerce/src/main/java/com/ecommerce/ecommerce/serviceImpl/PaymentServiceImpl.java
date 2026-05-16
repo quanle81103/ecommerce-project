@@ -144,7 +144,7 @@ public class PaymentServiceImpl {
             fields.remove("vnp_SecureHash");
             fields.remove("vnp_SecureHashType");
             // Check checksum
-            String signValue = VnPayUtil.hashAllFields(fields);
+            String signValue = VnPayUtil.hashAllFields(fields, vnPayConfig.getHashSecret());
             if (!signValue.equals(vnp_SecureHash)) {
                 return PaymentDto.VnPayResponse.builder().code("97").message("Invalid checksum").build();
             }
@@ -278,7 +278,7 @@ public class PaymentServiceImpl {
         String vnp_SecureHash = request.getParameter("vnp_SecureHash");
         fields.remove("vnp_SecureHash");
         fields.remove("vnp_SecureHashType");
-        String signValue = VnPayUtil.hashAllFields(fields);
+        String signValue = VnPayUtil.hashAllFields(fields, vnPayConfig.getHashSecret());
         if (signValue.equals(vnp_SecureHash)) {
             if ("00".equals(request.getParameter("vnp_ResponseCode"))) {
                 return PaymentDto.VnPayResponse.builder().code("00").message("GD Thành công").build();

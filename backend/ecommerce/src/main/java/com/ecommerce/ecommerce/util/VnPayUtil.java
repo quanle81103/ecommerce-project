@@ -12,10 +12,8 @@ import java.util.*;
 
 public class VnPayUtil {
 
-    public static String hashSecret;
-
     //Util for VNPAY
-    public static String hashAllFields(Map fields) {
+    public static String hashAllFields(Map fields, String hashSecret) {
         List fieldNames = new ArrayList(fields.keySet());
         Collections.sort(fieldNames);
         StringBuilder sb = new StringBuilder();
@@ -33,7 +31,7 @@ public class VnPayUtil {
             }
 
         }
-        return hmacSHA512(hashSecret,sb.toString());
+        return hmacSHA512(hashSecret, sb.toString());
     }
 
     public static String hmacSHA512(final String key, final String data) {
