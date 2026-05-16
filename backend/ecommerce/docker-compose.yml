@@ -57,6 +57,8 @@ services:
       GHN_CACHE_DISTRICT_TTL: 1440
       GHN_CACHE_PROVINCE_TTL: 1440
       GHN_CACHE_DEFAULT: 10
+
+      API_PREFIX: /api/v1
     ports:
       - "8080:8080"
 
