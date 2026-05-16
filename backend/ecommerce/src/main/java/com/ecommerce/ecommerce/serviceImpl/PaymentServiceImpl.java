@@ -72,10 +72,6 @@ public class PaymentServiceImpl {
         Payment payment = paymentRepository.findByTxnRef(request.getParameter("TxnRef"));
         Map<String, String> vnPayParams = vnPayConfig.getVnPayParams();
         long amount = Integer.parseInt(request.getParameter("amount")) * 100L;
-//        String ipAddr = VnPayUtil.getIpAddress(request);
-//        if ("0:0:0:0:0:0:0:1".equals(ipAddr)) {
-//            ipAddr = "127.0.0.1";
-//        }
         String ipAddr = VnPayUtil.getIpAddress(request);
         String amount1 = String.valueOf(amount);
         vnPayParams.put("vnp_Amount", amount1);
