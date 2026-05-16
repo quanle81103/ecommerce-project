@@ -1,8 +1,32 @@
 package com.ecommerce.ecommerce.serviceImpl;
 
+import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
 import com.ecommerce.ecommerce.config.ghn.GhnConfig;
 import com.ecommerce.ecommerce.config.payment.VNPayConfig;
-import com.ecommerce.ecommerce.dao.*;
+import com.ecommerce.ecommerce.dao.GhnOrderItem;
+import com.ecommerce.ecommerce.dao.Order;
+import com.ecommerce.ecommerce.dao.OrderItem;
+import com.ecommerce.ecommerce.dao.Payment;
+import com.ecommerce.ecommerce.dao.Product;
+import com.ecommerce.ecommerce.dao.ShippingOrder;
+import com.ecommerce.ecommerce.dao.Shop;
+import com.ecommerce.ecommerce.dao.User;
 import com.ecommerce.ecommerce.dto.GhnDto;
 import com.ecommerce.ecommerce.dto.PaymentDto;
 import com.ecommerce.ecommerce.exception.ResourceNotFound;
@@ -10,26 +34,17 @@ import com.ecommerce.ecommerce.repository.OrderRepository;
 import com.ecommerce.ecommerce.repository.PaymentRepository;
 import com.ecommerce.ecommerce.repository.ProductRepository;
 import com.ecommerce.ecommerce.repository.ShippingOrderRepository;
+import com.ecommerce.ecommerce.util.VnPayUtil;
 import com.ecommerce.ecommerce.util.status.OrderStatus;
 import com.ecommerce.ecommerce.util.status.PaymentStatus;
-import com.ecommerce.ecommerce.util.VnPayUtil;
 import com.ecommerce.ecommerce.util.status.ShippingStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.math.BigDecimal;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -61,7 +76,7 @@ public class PaymentServiceImpl {
 //        if ("0:0:0:0:0:0:0:1".equals(ipAddr)) {
 //            ipAddr = "127.0.0.1";
 //        }
-        String ipAddr = "127.0.0.1";
+        String ipAddr = VnPayUtil.getIpAddress(request);
         String amount1 = String.valueOf(amount);
         vnPayParams.put("vnp_Amount", amount1);
         vnPayParams.put("vnp_IpAddr", ipAddr);

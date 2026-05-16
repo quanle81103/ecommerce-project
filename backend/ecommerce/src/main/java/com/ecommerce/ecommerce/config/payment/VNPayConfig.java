@@ -46,8 +46,10 @@ public class VNPayConfig {
         vnPayParams.put("vnp_OrderType", this.vnp_OrderType);
         vnPayParams.put("vnp_ReturnUrl", this.vnp_ReturnUrl);
 //        vnPayParams.put("vnp_TxnRef", VnPayUtil.getRandomNumber(8));
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT+7"));
+        TimeZone vnTimeZone = TimeZone.getTimeZone("Asia/Ho_Chi_Minh");
+        Calendar calendar = Calendar.getInstance(vnTimeZone);
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        simpleDateFormat.setTimeZone(vnTimeZone);
         String vnp_CreateDate = simpleDateFormat.format(calendar.getTime());
         vnPayParams.put("vnp_CreateDate", vnp_CreateDate);
         calendar.add(Calendar.MINUTE, 15);
