@@ -10,6 +10,6 @@ public class GhnConfig {
     @Value("${ghn.token}")
     private String token;
 
-    @Value("${ghn.base-url}")
+    @Value("${ghn.base_url}")
     private String baseUrl;
 }
