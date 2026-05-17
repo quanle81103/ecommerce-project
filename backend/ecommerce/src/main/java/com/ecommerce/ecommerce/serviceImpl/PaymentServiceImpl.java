@@ -258,7 +258,7 @@ public class PaymentServiceImpl {
                 .toName(name)
                 .toPhone(user.getPhone())
                 .toAddress(user.getPlace() != null ? user.getPlace() : "N/A")
-                .toWardCode(String.valueOf(user.getWardCode()))
+                .toWardCode(user.getWardCode())
                 .toDistrictId(user.getDistrictId())
                 .weight(20).height(20).length(20).width(20)
                 .items(ghnOrderItems)

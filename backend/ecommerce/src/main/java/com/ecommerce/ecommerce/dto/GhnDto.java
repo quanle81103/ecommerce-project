@@ -110,7 +110,7 @@ public abstract class GhnDto {
             private Integer districtId;
 
             @JsonProperty("ward_code")
-            private Integer wardCode;
+            private String wardCode;
         }
     }
 
@@ -155,7 +155,7 @@ public abstract class GhnDto {
             private Integer districtId;
 
             @JsonProperty("ward_code")
-            private Integer wardCode;
+            private String wardCode;
         }
     }
 
@@ -190,7 +190,7 @@ public abstract class GhnDto {
         public static class WardDto {
 
             @JsonProperty("WardCode")
-            private Integer wardCode;
+            private String wardCode;
 
             @JsonProperty("WardName")
             private String wardName;

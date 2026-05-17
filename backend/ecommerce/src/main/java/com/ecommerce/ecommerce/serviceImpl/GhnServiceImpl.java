@@ -191,7 +191,7 @@ public class GhnServiceImpl implements GhnService {
     }
     @Override
     public String getWardName(String token, String ghnShopId) {
-        Integer wardCode = getInfo(token, ghnShopId).getWardCode();
+        String wardCode = getInfo(token, ghnShopId).getWardCode();
         return getWard(token, ghnShopId).stream().filter(d -> d.getWardCode().equals(wardCode))
                 .map(GhnDto.GhnWardResponse.WardDto::getWardName)
                 .findFirst().orElseThrow(() -> new ResourceNotFound("GHN master-data lookup failed"));

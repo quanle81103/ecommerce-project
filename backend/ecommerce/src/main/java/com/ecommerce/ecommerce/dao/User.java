@@ -32,7 +32,7 @@ public class User {
     private String phone;
 
     // ghn
-    private Integer wardCode;
+    private String wardCode;
     private String wardName;
     private String districtName;
     private Integer districtId;

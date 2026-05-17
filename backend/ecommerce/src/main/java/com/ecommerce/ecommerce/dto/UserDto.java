@@ -52,7 +52,7 @@ public abstract class UserDto {
         private String password;
 
         private String phone;
-        private Integer wardCode;
+        private String wardCode;
         private String wardName;
         private String districtName;
         private Integer districtId;
