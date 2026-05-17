@@ -91,6 +91,8 @@ public class GhnServiceImpl implements GhnService {
 
     @Override
     public boolean verifyGhnCredentials(String ghnToken, String shopId) {
+        log.info("GHN verify — baseUrl=[{}], shopId=[{}], tokenLen={}",
+                ghnConfig.getBaseUrl(), shopId, ghnToken == null ? 0 : ghnToken.length());
         WebClient webClient = buildClient(shopId, ghnToken);
 
         try {
