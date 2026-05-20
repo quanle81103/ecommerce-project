@@ -1,19 +1,19 @@
 package com.ecommerce.ecommerce.config;
 
-import com.ecommerce.ecommerce.dao.Role;
-import com.ecommerce.ecommerce.dao.User;
-import com.ecommerce.ecommerce.exception.ResourceNotFound;
-import com.ecommerce.ecommerce.repository.RoleRepository;
-import com.ecommerce.ecommerce.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import com.ecommerce.ecommerce.dao.Role;
+import com.ecommerce.ecommerce.dao.User;
+import com.ecommerce.ecommerce.exception.ResourceNotFound;
+import com.ecommerce.ecommerce.repository.RoleRepository;
+import com.ecommerce.ecommerce.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -25,7 +25,6 @@ public class RoleSeeder implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        System.out.println("Seeder running...");
         for (String name : DEFAULT_ROLES) {
             if (roleRepository.findByName(name).isEmpty()) {
                 Role role = new Role();
