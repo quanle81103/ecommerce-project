@@ -14,7 +14,7 @@ public abstract class CategoryDto {
     public static class CategoryResponse {
         private Long id;
         private String name;
-        private List<ProductDto> products;
+        private List<ProductDto.ProductResponse> products;
     }
 
     @Getter

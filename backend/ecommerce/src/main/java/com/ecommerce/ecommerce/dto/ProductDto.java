@@ -81,8 +81,8 @@ public abstract class ProductDto {
         private BigDecimal price;
         private int inventory;
         private String description;
-        private Brand brand;
-        private Category category;
-        private List<ImageDto> image;
+        private Long brandId;
+        private Long categoryId;
+        private List<ImageDto.ImageResponse> image;
     }
 }

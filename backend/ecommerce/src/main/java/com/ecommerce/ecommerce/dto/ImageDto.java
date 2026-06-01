@@ -1,8 +1,5 @@
 package com.ecommerce.ecommerce.dto;
 
-import com.ecommerce.ecommerce.dao.Product;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.*;
 
 public abstract class ImageDto {
@@ -13,6 +10,6 @@ public abstract class ImageDto {
     public static class ImageResponse {
         private Long id;
         private String imageKey;
-        private Product product;
+        private Long productId;
     }
 }

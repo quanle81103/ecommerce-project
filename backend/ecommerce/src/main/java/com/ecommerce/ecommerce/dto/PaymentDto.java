@@ -23,7 +23,7 @@ public abstract class PaymentDto {
     @Setter
     public static class PaymentResponse {
         private Long id;
-        private List<OrderDto> orders;
+        private List<OrderDto.OrderResponse> orders;
         private BigDecimal totalAmount;
         private String responseCode;
         private LocalDateTime createAt;
