@@ -72,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
                     throw new BusinessException(HttpStatus.CONFLICT,
                             "Insufficient inventory for product [%s]".formatted(product.getName()));
                 }
-//                product.setInventory(product.getInventory() - item.getQuantity());
+                product.setInventory(product.getInventory() - item.getQuantity());
 
                 OrderItem orderItem = new OrderItem(
                         item.getQuantity(),

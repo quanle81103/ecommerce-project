@@ -4,6 +4,7 @@ import com.ecommerce.ecommerce.dao.Product;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -20,4 +21,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Product p WHERE p.id = :id")
     Optional<Product> findByIdForUpdate(@Param("id") Long id);
+
+    @Modifying
+    @Query("UPDATE Product p SET p.inventory = p.inventory - :qty " + "WHERE p.id = :id AND p.inventory >= :qty")
+    int decreaseInventory(@Param("id") Long id, @Param("qty") int quantity);
+
+    @Modifying
+    @Query("UPDATE Product p SET p.inventory = p.inventory + :qty " + "WHERE p.id = :id")
+    int restoreInventory(@Param("id") Long id, @Param("qty") int quantity);
 }

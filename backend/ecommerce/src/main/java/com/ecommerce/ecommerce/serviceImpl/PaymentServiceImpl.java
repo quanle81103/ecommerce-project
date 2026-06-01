@@ -45,6 +45,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -57,9 +58,9 @@ public class PaymentServiceImpl {
     private final GhnServiceImpl ghnService;
     private final GhnConfig ghnConfig;
     private final ShopServiceImpl shopService;
-    private final ObjectMapper objectMapper;
     private final ShippingOrderRepository shippingOrderRepository;
     private final ProductRepository productRepository;
+
     // request sent from Backend Server side -> Vnpay
     public PaymentDto.VnPayResponse createVnPayPayment(HttpServletRequest request) throws ServletException {
 //        String userId = request.getParameter("userId");
@@ -113,6 +114,7 @@ public class PaymentServiceImpl {
     }
 
     // request received from VnPay -> Backend Server
+    @Transactional
     public PaymentDto.VnPayResponse processVnpayIpn(HttpServletRequest request) {
         try {
 
@@ -148,7 +150,7 @@ public class PaymentServiceImpl {
             if (!signValue.equals(vnp_SecureHash)) {
                 return PaymentDto.VnPayResponse.builder().code("97").message("Invalid checksum").build();
             }
-            Payment payment = Optional.ofNullable(paymentRepository.findByTxnRef(request.getParameter("vnp_TxnRef"))).orElseThrow(() -> new ResourceNotFound("Payment not found"));
+            Payment payment = paymentRepository.findByTxnRefForUpdate(request.getParameter("vnp_TxnRef")).orElseThrow(() -> new ResourceNotFound("Payment not found"));
             // Order order = orderRepository.findById(Long.valueOf(request.getParameter("vnp_TxnRef"))).orElseThrow(() -> new ResourceNotFound("Order not found")); // vnp_TxnRef exists in your database
             BigDecimal vnpAmount = new BigDecimal(request.getParameter("vnp_Amount")).divide(BigDecimal.valueOf(100));
             if (vnpAmount.compareTo(payment.calculateTotalAmount(payment.getOrders())) != 0) // vnp_Amount is valid (Check vnp_Amount VNPAY returns compared to the
@@ -156,20 +158,14 @@ public class PaymentServiceImpl {
                 return PaymentDto.VnPayResponse.builder().code("04").message("Invalid Amount").build();
             }
 
-            //amount of the code (vnp_TxnRef) in the Your database).
+            //amount of the code (vnp_TxnRef) in the  database).
             // PaymentStatus = 0 (pending)
             if (payment.getPaymentStatus() == PaymentStatus.PENDING) {
                 if ("00".equals(request.getParameter("vnp_ResponseCode"))) {
-                    //Here Code update PaymentStatus = 1 into your Database
+                    //Here Code update PaymentStatus = 1 into  Database
                     for(Order order : payment.getOrders()) {
                         order.setOrderStatus(OrderStatus.PAID);
                         orderRepository.save(order);
-
-                        for (OrderItem orderItem: order.getOrderitems()) {
-                            Product product = orderItem.getProduct();
-                            product.setInventory(product.getInventory() - orderItem.getQuantity());
-                            productRepository.save(product);
-                        }
 
                         Shop shop = order.getShop();
                         if (!shop.isGhnConnected()) { // ghnconnect = false
@@ -180,7 +176,6 @@ public class PaymentServiceImpl {
 
                         try {
                             GhnDto.GhnCreateOrderRequest req = buildGhnRequest(order);
-                            log.info(objectMapper.writeValueAsString(req));
                             GhnDto.GhnOrderResponse ghnOrderResponse = ghnService.createOrder(shop.getGhnToken(), String.valueOf(shop.getGhnShopId()), req);
 
                             LocalDateTime time = Instant
@@ -217,8 +212,13 @@ public class PaymentServiceImpl {
                     String name = payment.getUser().getFirstName() + payment.getUser().getLastName();
                     emailService.sendOrderEmail(payment.getUser().getEmail(), name, payment.getId(), String.valueOf(payment.getTotalAmount()));
                 } else {
-                    // Here Code update PaymentStatus = 2 into your Database
-                    payment.getOrders().forEach(order -> order.setOrderStatus(OrderStatus.PAYMENT_FAILED));
+                    // Here Code update PaymentStatus = 2 into Database
+                    for (Order order : payment.getOrders()) {
+                        for (OrderItem orderItem : order.getOrderitems()) {
+                            productRepository.restoreInventory(orderItem.getProduct().getId(), orderItem.getQuantity());
+                        }
+                        order.setOrderStatus(OrderStatus.PAYMENT_FAILED);
+                    }
                     payment.setPaymentStatus(PaymentStatus.FAILED);
                 }
                 paymentRepository.save(payment);
