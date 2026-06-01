@@ -11,6 +11,9 @@ import com.ecommerce.ecommerce.serviceImpl.ShopServiceImpl;
 import com.ecommerce.ecommerce.util.AuthUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -39,4 +42,8 @@ public class ShopController {
         return new ResponseObject<>(HttpStatus.OK, "Success", null);
     }
 
+    @GetMapping
+    public ResponseObject<Page<ShopDto.ShopResponse>> getAll(@PageableDefault(size = 10) Pageable pageable) {
+        return new ResponseObject<>(HttpStatus.OK, "Success", shopService.getAll(pageable));
+    }
 }

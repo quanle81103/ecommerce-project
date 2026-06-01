@@ -10,6 +10,7 @@ import com.ecommerce.ecommerce.util.MapperUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -38,4 +39,8 @@ public class CategoryServiceImpl implements CategoryService {
         return MapperUtil.mapObject(Optional.ofNullable(categoryRepo.findByName(name)).orElseThrow(() -> new ResourceNotFound("Category with name [%s] not found".formatted(name))), CategoryDto.CategoryResponse.class);
     }
 
+    @Override
+    public List<CategoryDto.CategoryResponse> getAllCategory() {
+        return MapperUtil.mapList(categoryRepo.findAll(), CategoryDto.CategoryResponse.class);
+    }
 }

@@ -10,6 +10,9 @@ import com.ecommerce.ecommerce.util.AuthUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +37,7 @@ public class ProductController {
 //        return productService.convertedToDto(productService.getProductByName(productName));
 //    }
 
-    @GetMapping
+    @GetMapping("/product/all")
     public ResponseObject<List<ProductDto.ProductResponse>>  getAllProducts() {
         return new ResponseObject<>(HttpStatus.OK, "Success", productService.getAllProduct());
     }
@@ -68,5 +71,11 @@ public class ProductController {
     public ResponseObject<ProductDto.ProductResponse> updateProduct(@Valid @RequestBody ProductDto.UpdateRequest request, @PathVariable Long productId) {
         return new ResponseObject<>(HttpStatus.OK, "Success",
                 productService.updateProduct(request, productId, AuthUtil.getCurrentUserId()));
+    }
+
+    // for pagination purpose
+    @GetMapping
+    public ResponseObject<Page<ProductDto.ProductResponse>> getAll(@PageableDefault(size = 20) Pageable pageable) {
+        return new ResponseObject<>(HttpStatus.OK, "Success", productService.getAllProduct(pageable));
     }
 }

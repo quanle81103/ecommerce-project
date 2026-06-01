@@ -7,6 +7,8 @@ import com.ecommerce.ecommerce.repository.BrandRepository;
 import com.ecommerce.ecommerce.service.BrandService;
 import com.ecommerce.ecommerce.util.MapperUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -43,5 +45,10 @@ public class BrandServiceImpl implements BrandService {
     @Override
     public void deleteBrand(Long id) {
 
+    }
+
+    @Override
+    public Page<BrandDto.BrandResponse> getAll(Pageable pageable) {
+        return brandRepository.findAll(pageable).map(b -> MapperUtil.mapObject(b, BrandDto.BrandResponse.class));
     }
 }

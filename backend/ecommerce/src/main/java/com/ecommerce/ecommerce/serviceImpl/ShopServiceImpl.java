@@ -12,6 +12,8 @@ import com.ecommerce.ecommerce.service.ShopService;
 import com.ecommerce.ecommerce.util.MapperUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -115,4 +117,8 @@ public class ShopServiceImpl implements ShopService {
         shopRepository.save(shop);
     }
 
+    @Override
+    public Page<ShopDto.ShopResponse> getAll(Pageable pageable) {
+        return shopRepository.findAll(pageable).map(s -> MapperUtil.mapObject(s, ShopDto.ShopResponse.class));
+    }
 }

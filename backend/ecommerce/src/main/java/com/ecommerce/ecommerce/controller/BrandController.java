@@ -6,13 +6,13 @@ import com.ecommerce.ecommerce.response.ResponseObject;
 import com.ecommerce.ecommerce.serviceImpl.BrandServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("${api.prefix}/brands")
@@ -24,5 +24,10 @@ public class BrandController {
     @PostMapping("/brand")
     public ResponseObject<BrandDto.BrandResponse> createBrand(@Valid @RequestBody BrandDto.CreateBrandRequest request) {
         return new ResponseObject<>(HttpStatus.CREATED, "Success", brandService.createBrand(request));
+    }
+
+    @GetMapping
+    public ResponseObject<Page<BrandDto.BrandResponse>> getAll(@PageableDefault Pageable pageable) {
+        return new ResponseObject<>(HttpStatus.OK, "Success", brandService.getAll(pageable));
     }
 }

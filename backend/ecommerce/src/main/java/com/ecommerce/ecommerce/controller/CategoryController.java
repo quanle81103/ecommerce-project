@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("${api.prefix}/categories")
 @RequiredArgsConstructor
@@ -32,5 +34,10 @@ public class CategoryController {
     public ResponseObject<CategoryDto.CategoryResponse> getCategoryById(@PathVariable Long categoryId)
     {
         return new ResponseObject<>(HttpStatus.OK, "Success", categoryService.getCategoryById(categoryId));
+    }
+
+    @GetMapping
+    public ResponseObject<List<CategoryDto.CategoryResponse>> getAllCategory() {
+        return new ResponseObject<>(HttpStatus.OK, "Success", categoryService.getAllCategory());
     }
 }

@@ -3,6 +3,8 @@ package com.ecommerce.ecommerce.service;
 import com.ecommerce.ecommerce.dao.CartItem;
 import com.ecommerce.ecommerce.dao.Shop;
 import com.ecommerce.ecommerce.dto.ShopDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,4 +20,6 @@ public interface ShopService {
 
     @Transactional
     void connectGhn(Long shopId, Long userId, String ghnToken, Integer ghnShopId);
+
+    Page<ShopDto.ShopResponse> getAll(Pageable pageable);
 }
