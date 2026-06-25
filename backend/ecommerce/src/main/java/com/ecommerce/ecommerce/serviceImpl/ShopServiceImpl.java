@@ -30,6 +30,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ShopServiceImpl implements ShopService {
     private final GhnServiceImpl ghnService;
+    private final S3ServiceImpl s3Service;
     private final ShopRepository shopRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -40,7 +41,7 @@ public class ShopServiceImpl implements ShopService {
     @Transactional
     @Override
     public ShopDto.ShopResponse createShop(ShopDto.CreateShopRequest request, MultipartFile file) throws IOException {
-        String logo_Url = UploadLogoImage(file);
+        String logo_Url = s3Service.uploadFile(file, "shops");
         Shop shop = new Shop();
         shop.setDescription(request.getDescription());
         // get LogoUrl, Logo image was uploaded to aws
@@ -59,21 +60,6 @@ public class ShopServiceImpl implements ShopService {
         return MapperUtil.mapObject(shopRepository.save(shop), ShopDto.ShopResponse.class);
     }
 
-    public String UploadLogoImage(MultipartFile file) throws IOException {
-        // For example original = "my-photo.png"
-        String fileName = file.getOriginalFilename();
-        String path = "shops/" + UUID.randomUUID() + "/" + fileName;
-
-        PutObjectRequest request = PutObjectRequest.builder().key(path).bucket(bucketName).build();
-        s3Client.putObject(request /*metadata*/, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
-
-        return buildUrl(path);
-    }
-
-    private String buildUrl(String path) {
-        return "https://" + bucketName + "s3.amazonaws.com/" + path ;
-    }
-
     @Override
     public ShopDto.ShopResponse getShopById(Long shopId) {
         return MapperUtil.mapObject(shopRepository.findById(shopId).orElseThrow(() -> new ResourceNotFound("Shop with id [%s] not found".formatted(shopId))), ShopDto.ShopResponse.class);
@@ -84,10 +70,6 @@ public class ShopServiceImpl implements ShopService {
         return MapperUtil.mapList(shopRepository.findAll(), ShopDto.ShopResponse.class);
     }
 
-//    @Override
-//    public Shop updateShop(Long shopId, UpdateShopRequest request) {
-//        return null;
-//    }
 
     @Override
     public void deleteShop(Long shopId) {
