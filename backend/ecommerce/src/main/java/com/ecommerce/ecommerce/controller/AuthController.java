@@ -21,4 +21,16 @@ public class AuthController {
         AuthResponse response = authService.login(request);
         return new ResponseObject<>(HttpStatus.OK, "Success", response);
     }
+
+    @PostMapping("/forget-password")
+    public ResponseObject<Void> forgetPassword(@Valid @RequestBody AuthDto.ForgetPasswordRequest request) {
+        authService.passwordResetToken(request);
+        return new ResponseObject<>(HttpStatus.OK, "Success", null);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseObject<Void> resetPassword(@RequestBody AuthDto.ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return new ResponseObject<>(HttpStatus.OK, "Success", null);
+    }
 }

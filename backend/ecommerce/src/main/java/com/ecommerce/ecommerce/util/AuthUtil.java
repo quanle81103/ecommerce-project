@@ -7,8 +7,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import com.ecommerce.ecommerce.security.user.ShopUserDetail;
 
 public final class AuthUtil {
-    private AuthUtil() {}
-
     public static Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof ShopUserDetail principal)) {
