@@ -32,11 +32,6 @@ public class ProductController {
         return new ResponseObject<>(HttpStatus.OK, "Success", productService.getProductById(productId));
     }
 
-//    @GetMapping("/product/by")
-//    public ProductDto getProductByName(@RequestParam String productName) {
-//        return productService.convertedToDto(productService.getProductByName(productName));
-//    }
-
     @GetMapping("/product/all")
     public ResponseObject<List<ProductDto.ProductResponse>>  getAllProducts() {
         return new ResponseObject<>(HttpStatus.OK, "Success", productService.getAllProduct());
