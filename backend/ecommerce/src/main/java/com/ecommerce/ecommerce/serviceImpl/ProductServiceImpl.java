@@ -37,10 +37,6 @@ public class ProductServiceImpl implements ProductService {
                 productRepository.findById(id).orElseThrow(() -> new ResourceNotFound("Product with id [%s] not found".formatted(id))), ProductDto.ProductResponse.class);
     }
 
-    public Product getProductById1(Long productId) {
-        return productRepository.findById(productId).orElseThrow(() -> new ResourceNotFound("Product with id [%s] not found".formatted(productId)));
-    }
-
     public Product createProduct(ProductDto.CreateRequest request, Brand brand, Category category, Shop shop) {
         Product product = productRepository.findByName(request.getName());
         if (product != null) {
