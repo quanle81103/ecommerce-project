@@ -8,8 +8,9 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 @Configuration
 public class MailConfig {
+
     @Bean
-    public static SimpleMailMessage templateSimpleMessage () {
+    public static SimpleMailMessage orderSuccessTemplate () {
         SimpleMailMessage message = new SimpleMailMessage();
 
         message.setText("""
@@ -20,6 +21,15 @@ public class MailConfig {
 
             Cảm ơn bạn đã mua sắm
             """);
+        return message;
+    }
+
+    @Bean
+    public static SimpleMailMessage forgotPasswordTemplate () {
+        SimpleMailMessage message = new SimpleMailMessage();
+
+        message.setText("Xin chào %s, Đây là link đăng nhập của bạn %s, Lưu ý sẽ hết hạn sau 15 minute");
+
         return message;
     }
 }
