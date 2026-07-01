@@ -47,14 +47,6 @@ public class User {
     @OneToMany(mappedBy = "user")
     private Set<Order> orders = new HashSet<>();
 
-//    public User(String firstName, String lastName, String email, String place, String password) {
-//        this.firstName = firstName;
-//        this.lastName = lastName;
-//        this.email = email;
-//        this.place = place;
-//        this.password = password;
-//    }
-
     @ManyToMany(cascade = {CascadeType.DETACH, CascadeType.REFRESH, CascadeType.MERGE}, fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_role",
@@ -63,8 +55,4 @@ public class User {
     )
     private Collection<Role> roles = new HashSet<>();
 
-//    @NotNull
-//    public void setCart(Cart cart) {
-//        this.cart = cart;
-//    }
 }
