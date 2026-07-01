@@ -10,8 +10,6 @@ import java.util.List;
 
 public interface ImageService {
 
-    List<String> getImageUrl(Long productId);
-
     ImageDto.ImageResponse getImage(Long id);
 
     void deleteImageWithId(Long imageId);
