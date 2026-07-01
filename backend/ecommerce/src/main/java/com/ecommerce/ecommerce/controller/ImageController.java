@@ -41,6 +41,7 @@ public class ImageController {
     @PreAuthorize("hasRole('SHOP_OWNER')")
     @PostMapping("/image/{productId}/upload")
     public ResponseObject<ImageDto.ImageResponse> uploadImage(@RequestParam("file") MultipartFile multipartFile, @PathVariable Long productId) throws IOException {
+//        System.out.println("file name: " + multipartFile.getOriginalFilename());
         return new ResponseObject<>(HttpStatus.OK, "Success", imageService.uploadImage(multipartFile, productId));
     }
 
