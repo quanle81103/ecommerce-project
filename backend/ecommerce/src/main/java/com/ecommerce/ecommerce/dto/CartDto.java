@@ -16,7 +16,7 @@ public abstract class CartDto {
         private Long id;
         private BigDecimal totalAmount;
         private Long userId;
-        private HashSet<CartItemDto> cartItems;
+        private List<CartItemDto.CartItemResponse> cartItems;
     }
 
 }

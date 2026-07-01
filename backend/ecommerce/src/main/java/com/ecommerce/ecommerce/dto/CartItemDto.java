@@ -6,12 +6,17 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class CartItemDto {
-    private Long id;
-    private int quantity;
-    private BigDecimal unitPrice;
-    private Long productId;
+
+public abstract class CartItemDto {
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CartItemResponse {
+        private Long id;
+        private int quantity;
+        private BigDecimal unitPrice;
+        private Long productId;
+        private String productName;
+        private String productUrl;
+    }
 }
