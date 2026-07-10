@@ -18,6 +18,17 @@ public abstract class ShopDto {
         private Long userId;
     }
 
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ShopInfoResponse {
+        private Long id;
+        private String logoUrl;
+        private int numOfProducts;
+        private String description;
+        private String shopName;
+    }
+
     @Getter
     @Setter
     @Builder

@@ -3,13 +3,12 @@ package com.ecommerce.ecommerce.dto;
 import lombok.*;
 
 public abstract class ImageDto {
-    @Getter
-    @Setter
+    @Data
     @AllArgsConstructor
     @NoArgsConstructor
     public static class ImageResponse {
         private Long id;
-        private String imageKey;
+        private String imageUrl;
         private Long productId;
     }
 }
