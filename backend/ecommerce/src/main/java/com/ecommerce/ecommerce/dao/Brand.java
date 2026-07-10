@@ -23,10 +23,8 @@ public class Brand {
     private Long id;
     private String name;
     private String description;
-//    private String logoUrl;
 
     @OneToMany(mappedBy = "brand", fetch = FetchType.LAZY, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.PERSIST})
     @JsonIgnore
     private List<Product> products;
-
 }
