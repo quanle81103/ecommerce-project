@@ -10,11 +10,13 @@ import com.ecommerce.ecommerce.repository.RoleRepository;
 import com.ecommerce.ecommerce.repository.UserRepository;
 import com.ecommerce.ecommerce.service.UserService;
 import com.ecommerce.ecommerce.util.MapperUtil;
+import com.ecommerce.ecommerce.util.status.RoleStatus;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -23,15 +25,15 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @PersistenceContext
-    private EntityManager entityManager;
+//    @PersistenceContext
+//    private EntityManager entityManager;
 
     @Override
     public UserDto.UserResponse createUser(UserDto.CreateUserRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new ResourceAlreadyExist("User with email [%s] already exist in db".formatted(request.getEmail()));
         }
-        Role userRole = roleRepository.findByName("ROLE_USER")
+        Role userRole = roleRepository.findByRoleStatus(RoleStatus.CUSTOMER)
                 .orElseThrow(() -> new IllegalStateException("ROLE_USER not seeded"));
 
         User user = new User();
@@ -40,6 +42,8 @@ public class UserServiceImpl implements UserService {
         user.setPlace(request.getPlace());
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
+        user.setPhone(request.getPhone());
+        // Role customer
         user.getRoles().add(userRole);
 
         Cart cart = new Cart();
@@ -47,7 +51,7 @@ public class UserServiceImpl implements UserService {
         user.setCart(cart);
 
         User saved = userRepository.save(user);
-        entityManager.detach(saved);
+//        entityManager.detach(saved);
         return MapperUtil.mapObject(saved, UserDto.UserResponse.class);
     }
 
@@ -82,5 +86,28 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFound("User with id [%s] not found".formatted(userId)));
         userRepository.delete(user);
+    }
+
+
+    @Transactional
+    public void assignRole(Long userId, RoleStatus status) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFound("User with id [%s] not found".formatted(userId)));
+
+        Role role = roleRepository.findByRoleStatus(status).orElseThrow(() -> new ResourceNotFound("Role not found"));
+
+        user.getRoles().add(role);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    // mainly for revoke shop owner role
+    public void revokeRole(Long userId, RoleStatus status) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFound("User with id [%s] not found".formatted(userId)));
+
+        Role role = roleRepository.findByRoleStatus(status).orElseThrow(() -> new ResourceNotFound("Role not found"));
+
+        user.getRoles().remove(role);
+
+        userRepository.save(user);
     }
 }

@@ -16,7 +16,6 @@ import com.ecommerce.ecommerce.util.status.ShippingStatus;
 import io.netty.resolver.DefaultAddressResolverGroup;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -29,10 +28,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -86,6 +82,134 @@ public class GhnServiceImpl implements GhnService {
         } catch (Exception e) {
             log.error("[Shop {}] Error create orders GHN: {}", ghnShopId, e.getMessage());
             throw new ExternalServiceException("Unable to create order: " + e.getMessage(), e);
+        }
+    }
+
+    // get Service_id
+    public GhnDto.GhnAvailableServiceResponse getAvailableService(String token, String shopId, GhnDto.GhnAvailableServiceRequest request) {
+        WebClient webClient = buildClient(shopId, token);
+
+        try {
+            GhnDto.GhnAvailableServiceResponse response = webClient.post().uri("/shiip/public-api/v2/shipping-order/available-services")
+                    .bodyValue(request)
+                    .retrieve()
+                        .onStatus(HttpStatusCode::isError, res ->
+                                res.bodyToMono(String.class)
+                                        .flatMap(body -> Mono.error(
+                                                new ExternalServiceException(
+                                                        "GHN error: " + body
+                                                )))
+                        )
+                        .bodyToMono(GhnDto.GhnAvailableServiceResponse.class)
+                        .block();
+
+            if (response == null) {
+                throw new ExternalServiceException("Unable to receive response from GHN");
+            }
+
+            if (response.getCode() != 200) {
+                throw new ExternalServiceException(response.getMessage());
+            }
+
+            return response;
+
+        } catch (ExternalServiceException e) {
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error getting available services: {}", e.getMessage());
+
+            throw new ExternalServiceException(
+                    "Unable to get available services: " + e.getMessage(),
+                    e
+            );
+        }
+    }
+
+    @Override
+    public GhnDto.GhnShippingOrderFeeResponse getShippingFee(String shopId, String token, GhnDto.GhnShippingOrderFeeRequest request) {
+
+        WebClient webClient = buildClient(shopId, token);
+
+        try {
+
+            GhnDto.GhnShippingOrderFeeResponse response =
+                    webClient.post()
+                            .uri("/shiip/public-api/v2/shipping-order/fee")
+                            .bodyValue(request)
+                            .retrieve()
+                            .onStatus(HttpStatusCode::isError, clientResponse ->
+                                    clientResponse.bodyToMono(String.class)
+                                            .flatMap(body -> Mono.error(
+                                                    new ExternalServiceException(
+                                                            "GHN Fee API Error: " + body
+                                                    )
+                                            ))
+                            )
+                            .bodyToMono(GhnDto.GhnShippingOrderFeeResponse.class)
+                            .block();
+
+            if (response == null) {
+                throw new ExternalServiceException("No response from GHN Fee API");
+            }
+
+            if (response.getCode() != 200) {
+                throw new ExternalServiceException(response.getMessage());
+            }
+
+            return response;
+
+        } catch (ExternalServiceException e) {
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error while calculating shipping fee", e);
+
+            throw new ExternalServiceException(
+                    "Unable to calculate shipping fee",
+                    e
+            );
+        }
+    }
+
+    @Override
+    public GhnDto.GhnLeadTimeResponse getLeadTime(String shopId, String token, GhnDto.GhnLeadTime request) {
+        WebClient webClient = buildClient(shopId, token);
+        try {
+
+            GhnDto.GhnLeadTimeResponse response =
+                    webClient.post()
+                            .uri("/shiip/public-api/v2/shipping-order/leadtime")
+                            .bodyValue(request)
+                            .retrieve()
+                            .onStatus(HttpStatusCode::isError, clientResponse ->
+                                    clientResponse.bodyToMono(String.class)
+                                            .flatMap(body -> Mono.error(
+                                                    new ExternalServiceException(
+                                                            "GHN Fee API Error: " + body
+                                                    )
+                                            ))
+                            )
+                            .bodyToMono(GhnDto.GhnLeadTimeResponse.class)
+                            .block();
+
+            if (response == null) {
+                throw new ExternalServiceException("No response from GHN Lead time API");
+            }
+
+            if (response.getCode() != 200) {
+                throw new ExternalServiceException(response.getMessage());
+            }
+
+            return response;
+
+        } catch (ExternalServiceException e) {
+            throw e;
+
+        } catch (Exception e) {
+            log.error("Error while calculating lead time", e);
+
+            throw new ExternalServiceException("Unable to calculate lead time", e);
         }
     }
 

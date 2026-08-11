@@ -38,17 +38,6 @@ public class ImageServiceImpl implements ImageService {
         return "https://" + bucketName + "s3.amazonaws.com/" + key;
     }
 
-    @Override
-    public List<String> getImageUrl(Long productId) {
-        Product product = MapperUtil.mapObject(productServiceImpl.getProductById(productId), Product.class);
-        List<String> urls = new ArrayList<>();
-        for (Image image : product.getImage()) {
-            String imageUrl = buildImageUrl(image.getImageKey());
-            urls.add(imageUrl);
-        }
-        return urls;
-    }
-
     public Image getImageById(Long id) {
         return imageRepository.findById(id).orElseThrow(() -> new ResourceNotFound("Image with id [%s] not found".formatted(id)));
     }

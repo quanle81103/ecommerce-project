@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.ecommerce.ecommerce.dto.GhnDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -52,7 +53,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public List<OrderDto.OrderResponse> createOrderFromCart(Long userId) {
+    public OrderDto.OrderResponse createOrderFromCart(Long userId, OrderDto.CreateOrderRequest request) {
         List<Order> orders = new ArrayList<>();
         Cart cart = cartRepository.findIdByUser_Id(userId).orElseThrow(() -> new ResourceNotFound("Cart not found with user [%s]".formatted(userId)));
         Map<Long, List<CartItem>> itemGroupedByShop = groupCartItemsByShop(cart);
@@ -61,7 +62,7 @@ public class OrderServiceImpl implements OrderService {
         for (Long shopId : itemGroupedByShop.keySet()) {
             Shop shop = shopRepository.findById(shopId).orElseThrow(() -> new ResourceNotFound("Shop with id [%s] not found".formatted(shopId)));
             // this order will store all products user buy on a particular shop
-            Order order = createOrder(userId, shop);
+            Order order = createOrder(userId, shop, request);
             orderRepository.save(order);
             List<CartItem> items = itemGroupedByShop.get(shopId);
             for (CartItem item : items) {
@@ -89,7 +90,7 @@ public class OrderServiceImpl implements OrderService {
         }
         Payment payment = new Payment();
         payment.setOrders(orders);
-//        payment.setTotalAmount(totalAmount);
+        payment.setTotalAmount(totalAmount);
         payment.setCreateAt(LocalDateTime.now());
         payment.setPaymentStatus(PaymentStatus.PENDING);
         payment.setTxnRef(String.valueOf(System.currentTimeMillis()));
@@ -103,7 +104,11 @@ public class OrderServiceImpl implements OrderService {
 
         cart.getCartItems().clear();
         cartRepository.save(cart);
-        return MapperUtil.mapList(orders,OrderDto.OrderResponse.class);
+//        return MapperUtil.mapList(orders,OrderDto.OrderResponse.class);
+        List<OrderDto.OrderResponse.Response> responses = orders.stream()
+                .map(order -> OrderDto.OrderResponse.Response.builder()
+                        .id(order.getId()).totalAmount(order.getTotalAmount()).build()).toList();
+        return OrderDto.OrderResponse.builder().orders(responses).txnRef(payment.getTxnRef()).totalAmount(payment.getTotalAmount()).build();
     }
 
     private Map<Long, List<CartItem>> groupCartItemsByShop(Cart cart) {
@@ -112,13 +117,16 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.groupingBy(item -> item.getProduct().getShop().getId()));
     }
 
-    public Order createOrder(Long userId, Shop shop) {
+    public Order createOrder(Long userId, Shop shop, OrderDto.CreateOrderRequest request) {
         Order order = new Order();
         User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFound("User with id [%s] not found".formatted(userId)));
         order.setOrderStatus(OrderStatus.PENDING);
         order.setOrderDate(LocalDateTime.now());
         order.setUser(user);
         order.setShop(shop);
+        order.setProvinceId(request.getProvinceId());
+        order.setDistrictId(request.getDistrictId());
+        order.setWardCode(request.getWardCode());
         return order;
     }
 

@@ -1,17 +1,14 @@
 package com.ecommerce.ecommerce.serviceImpl;
 
-import com.ecommerce.ecommerce.dao.Brand;
-import com.ecommerce.ecommerce.dao.Category;
-import com.ecommerce.ecommerce.dao.Product;
-import com.ecommerce.ecommerce.dao.Shop;
+import com.ecommerce.ecommerce.dao.*;
+import com.ecommerce.ecommerce.dto.ImageDto;
 import com.ecommerce.ecommerce.dto.ProductDto;
 import com.ecommerce.ecommerce.exception.ResourceNotFound;
 import com.ecommerce.ecommerce.exception.ResourceAlreadyExist;
-import com.ecommerce.ecommerce.repository.BrandRepository;
-import com.ecommerce.ecommerce.repository.CategoryRepository;
-import com.ecommerce.ecommerce.repository.ProductRepository;
-import com.ecommerce.ecommerce.repository.ShopRepository;
+import com.ecommerce.ecommerce.repository.*;
 import com.ecommerce.ecommerce.service.ProductService;
+import com.ecommerce.ecommerce.util.AuthUtil;
+import com.ecommerce.ecommerce.util.Mapper.ProductMapper;
 import com.ecommerce.ecommerce.util.MapperUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +16,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,13 +31,18 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
     private final ShopRepository shopRepository;
     private final BrandRepository brandRepository;
+    private final S3ServiceImpl s3Service;
+    private final ImageRepository imageRepository;
+    private final ProductMapper productMapper;
+
     @Override
     public ProductDto.ProductResponse getProductById(Long id) {
-        return MapperUtil.mapObject(
-                productRepository.findById(id).orElseThrow(() -> new ResourceNotFound("Product with id [%s] not found".formatted(id))), ProductDto.ProductResponse.class);
+        Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFound("Product with id [%s] not found".formatted(id)));
+
+        return productMapper.toResponse(product);
     }
 
-    public Product createProduct(ProductDto.CreateRequest request, Brand brand, Category category, Shop shop) {
+    public Product createProduct(ProductDto.CreateRequest request, Brand brand, Category category, Shop shop, List<MultipartFile> files) {
         Product product = productRepository.findByName(request.getName());
         if (product != null) {
             throw new ResourceAlreadyExist("Product with name [%s] already exist".formatted(request.getName()));
@@ -54,13 +59,32 @@ public class ProductServiceImpl implements ProductService {
             product.setWeight(request.getWeight());
             product.setWidth(request.getWidth());
             product.setShop(shop);
+            log.info("Entity price = {}", product.getPrice());
+            product = productRepository.save(product);
+            log.info("Saved price = {}", product.getPrice());
+            List<Image> images = new ArrayList<>();
+            for (MultipartFile file : files) {
+                try {
+                    String imageKey =
+                            s3Service.uploadFile(file, "products/" + product.getId());
+                    Image image = new Image();
+                    image.setProduct(product);
+                    image.setImageKey(imageKey);
+                    imageRepository.save(image);
+                    images.add(image);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            product.setImage(images);
         }
-        return productRepository.save(product);
+        return product;
     }
 
+    @Transactional
     @Override
-    public ProductDto.ProductResponse addProduct(ProductDto.CreateRequest request, Long userId) {
-        log.info("ProductServiceImpl.create");
+    public ProductDto.ProductResponse addProduct(ProductDto.CreateRequest request, Long userId, List<MultipartFile> files) {
+//        log.info("ProductServiceImpl.create");
         // check whether the product category is exist or else create new one
         Category category;
         if (request.getCategoryId() != null) {
@@ -81,21 +105,21 @@ public class ProductServiceImpl implements ProductService {
             brand = brandRepository.findById(request.getBrandId()).orElseThrow(() -> new ResourceNotFound("Brand with id [%s] is not exist".formatted(request.getBrandId())));
         } else {
             brand = Optional.ofNullable(brandRepository.findByName(request.getBrandName()))
-                        // create new brand
+                    // create new brand
                     .orElseGet(() -> {
-                       Brand brand1 = new Brand();
-                       brand1.setName(request.getBrandName());
+                        Brand brand1 = new Brand();
+                        brand1.setName(request.getBrandName());
 
-                       return brand1;
+                        return brand1;
                     });
         }
 
         Shop shop = shopRepository.findById(request.getShopId()).orElseThrow(() -> new ResourceNotFound("Shop with id [%s] not found".formatted(request.getShopId())));
         assertShopOwnedBy(shop, userId);
 
-        Product product = createProduct(request, brand, category, shop);
-
-        return MapperUtil.mapObject(productRepository.save(product), ProductDto.ProductResponse.class);
+        log.info("Service price = {}", request.getPrice());
+        Product product = createProduct(request, brand, category, shop, files);
+        return productMapper.toResponse(product);
     }
 
     @Override
@@ -134,21 +158,34 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductDto.ProductResponse> getProductByCategory(Category category) {
-        return MapperUtil.mapList(productRepository.findByCategory_Name(category.getName()), ProductDto.ProductResponse.class);
+//        return MapperUtil.mapList(productRepository.findByCategory_Name(category.getName()), ProductDto.ProductResponse.class);
+        return productRepository.findByCategory_Name(category.getName())
+                .stream()
+                .map(productMapper::toResponse)
+                .toList();
     }
 
     @Override
     public List<ProductDto.ProductResponse> getProductByBrand(Brand brand) {
-        return MapperUtil.mapList(productRepository.findByBrand_Name(brand.getName()), ProductDto.ProductResponse.class);
+        return productRepository.findByBrand_Name(brand.getName())
+                .stream().map(productMapper::toResponse).toList();
     }
 
     @Override
     public List<ProductDto.ProductResponse> getAllProduct() {
-        return MapperUtil.mapList(productRepository.findAll(), ProductDto.ProductResponse.class);
+        return productRepository.findAll().stream().map(productMapper::toResponse).toList();
     }
 
     @Override
     public Page<ProductDto.ProductResponse> getAllProduct(Pageable pageable) {
-        return productRepository.findAll(pageable).map(p -> MapperUtil.mapObject(p, ProductDto.ProductResponse.class));
+        return productRepository.findAll(pageable).map(productMapper::toResponse);
+    }
+
+    public List<ProductDto.ProductResponse> getProductsOfShop() {
+        Long currentUser = AuthUtil.getCurrentUserId();
+        Shop shop = shopRepository.findByUser_Id(currentUser).orElseThrow(() -> new ResourceNotFound("You do not own shop"));
+        List<Product> products = productRepository.findByShop_Id(shop.getId());
+
+        return MapperUtil.mapList(products, ProductDto.ProductResponse.class);
     }
 }

@@ -40,11 +40,10 @@ import com.ecommerce.ecommerce.util.status.PaymentStatus;
 import com.ecommerce.ecommerce.util.status.ShippingStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -60,6 +59,7 @@ public class PaymentServiceImpl {
     private final ShopServiceImpl shopService;
     private final ShippingOrderRepository shippingOrderRepository;
     private final ProductRepository productRepository;
+    private final ShippingOrderServiceImpl shippingOrderService;
 
     // request sent from Backend Server side -> Vnpay
     public PaymentDto.VnPayResponse createVnPayPayment(HttpServletRequest request) throws ServletException {
@@ -108,7 +108,7 @@ public class PaymentServiceImpl {
         queryUrl += "&vnp_SecureHash=" + secureHash;
         String paymentUrl = vnPayConfig.getVnp_PayUrl() + "?" + queryUrl;
         vnPayParams.forEach((k, v) -> {
-            if (v == null) System.out.println("NULL FIELD: " + k);
+            if (v == null) log.info("NULL FIELD: " + k);
         });
         return PaymentDto.VnPayResponse.builder().code("00").message("success").paymentUrl(paymentUrl).build();
     }
@@ -167,40 +167,41 @@ public class PaymentServiceImpl {
                         order.setOrderStatus(OrderStatus.PAID);
                         orderRepository.save(order);
 
-                        Shop shop = order.getShop();
-                        if (!shop.isGhnConnected()) { // ghnconnect = false
-                            order.setOrderStatus(OrderStatus.PROCESSING);
-                            orderRepository.save(order);
-                            continue;
-                        }
-
-                        try {
-                            GhnDto.GhnCreateOrderRequest req = buildGhnRequest(order);
-                            GhnDto.GhnOrderResponse ghnOrderResponse = ghnService.createOrder(shop.getGhnToken(), String.valueOf(shop.getGhnShopId()), req);
-
-                            LocalDateTime time = Instant
-                                    .parse(ghnOrderResponse.getData().getExpectedDeliveryTime())
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDateTime();
-
-                            ShippingOrder shippingOrder = ShippingOrder.builder()
-                                    .ghnOrderCode(ghnOrderResponse.getData().getOrderCode())
-                                    .shippingFee(ghnOrderResponse.getData().getTotalFee())
-                                    .expectedDeliveryTime(time)
-                                    .createdAt(LocalDateTime.now())
-                                    .status(ShippingStatus.CREATED)
-                                    .order(order)
-                                    .build();
-
-                            shippingOrderRepository.save(shippingOrder);
-                            order.setOrderStatus(OrderStatus.SHIPPING);
-                            orderRepository.save(order);
-                        } catch (Exception e) {
-                            log.error("GHN failed for order {}: {}", order.getId(), e.getMessage());
-//                            order.setOrderStatus(OrderStatus.CANCELLED);
-                            orderRepository.save(order);
-                        }
-                    };
+//                        Shop shop = order.getShop();
+//                        if (!shop.isGhnConnected()) { // ghnconnect = false
+//                            order.setOrderStatus(OrderStatus.PROCESSING);
+//                            orderRepository.save(order);
+//                            continue;
+//                        }
+//
+//                        try {
+//                            GhnDto.GhnCreateOrderRequest req = buildGhnRequest(order);
+//                            GhnDto.GhnOrderResponse ghnOrderResponse = ghnService.createOrder(shop.getGhnToken(), String.valueOf(shop.getGhnShopId()), req);
+////                            log.info("GHN Response: {}", ghnOrderResponse);
+//
+//                            LocalDateTime time = Instant
+//                                    .parse(ghnOrderResponse.getData().getExpectedDeliveryTime())
+//                                    .atZone(ZoneId.systemDefault())
+//                                    .toLocalDateTime();
+//
+//                            ShippingOrder shippingOrder = ShippingOrder.builder()
+//                                    .ghnOrderCode(ghnOrderResponse.getData().getOrderCode())
+//                                    .shippingFee(ghnOrderResponse.getData().getTotalFee())
+//                                    .expectedDeliveryTime(time)
+//                                    .createdAt(LocalDateTime.now())
+//                                    .status(ShippingStatus.CREATED)
+//                                    .order(order)
+//                                    .build();
+//
+//                            shippingOrderRepository.save(shippingOrder);
+//                            order.setOrderStatus(OrderStatus.SHIPPING);
+//                            orderRepository.save(order);
+//                        } catch (Exception e) {
+//                            log.error("GHN failed for order {}", order.getId(), e);
+////                            order.setOrderStatus(OrderStatus.CANCELLED);
+//                            orderRepository.save(order);
+//                        }
+                    }
                     BigDecimal totalAmount = payment.getOrders().stream()
                             .filter(order -> order.getOrderStatus() != OrderStatus.CANCELLED)
                             .map(Order::getTotalAmount)
@@ -211,6 +212,7 @@ public class PaymentServiceImpl {
                     paymentRepository.save(payment);
                     String name = payment.getUser().getFirstName() + payment.getUser().getLastName();
                     emailService.sendOrderEmail(payment.getUser().getEmail(), name, payment.getId(), String.valueOf(payment.getTotalAmount()));
+                    shippingOrderService.createShippingOrders(payment.getId());
                 } else {
                     // Here Code update PaymentStatus = 2 into Database
                     for (Order order : payment.getOrders()) {
@@ -231,39 +233,6 @@ public class PaymentServiceImpl {
         }
     }
 
-    private GhnDto.GhnCreateOrderRequest buildGhnRequest(Order order) {
-        List<GhnOrderItem> ghnOrderItems = order.getOrderitems()
-                .stream()
-                .map(item -> GhnOrderItem.builder()
-                        .name(item.getProduct().getName())
-                        .quantity(item.getQuantity())
-                        .price(item.getUnitPrice().intValue())
-                        .weight(item.getWeight())
-                        .code(String.valueOf(item.getProduct().getId()))
-                        .build()).toList();
-        Shop shop = order.getShop();
-        User user = order.getUser();
-        String name = user.getFirstName() + user.getLastName();
-//        log.info("ToName: {} ToPhone: {} RequiredNote: {}", name, user.getPhone(), "KHONGCHOXEMHANG");
-        return GhnDto.GhnCreateOrderRequest.builder()
-                .fromName(shop.getFromName())
-                .fromPhone(shop.getFromPhone())
-                .fromAddress(shop.getFromAddress())
-                .fromWardName(shop.getFromWardName())
-                .fromDistrictName(shop.getFromDistrictName())
-                .fromProvinceName(shop.getFromProvinceName())
-                .paymentTypeId(1)
-                .serviceTypeId(2)
-                .requiredNote("KHONGCHOXEMHANG")
-                .toName(name)
-                .toPhone(user.getPhone())
-                .toAddress(user.getPlace() != null ? user.getPlace() : "N/A")
-                .toWardCode(user.getWardCode())
-                .toDistrictId(user.getDistrictId())
-                .weight(20).height(20).length(20).width(20)
-                .items(ghnOrderItems)
-                .build();
-    }
 
     public PaymentDto.VnPayResponse returnUrl(HttpServletRequest request) {
         //Begin process return from VNPAY
@@ -289,4 +258,14 @@ public class PaymentServiceImpl {
             return PaymentDto.VnPayResponse.builder().code("99").message("Chữ ký không hợp lệ").build();
         }
     }
+
+    public PaymentDto.PaymentStatusResponse getPaymentStatus(String txnRef) {
+
+        Payment payment = paymentRepository.findByTxnRef(txnRef);
+        return PaymentDto.PaymentStatusResponse.builder()
+                .paymentId(payment.getId())
+                .txnRef(payment.getTxnRef())
+                .status(payment.getPaymentStatus().name())
+                .build();
+        }
 }

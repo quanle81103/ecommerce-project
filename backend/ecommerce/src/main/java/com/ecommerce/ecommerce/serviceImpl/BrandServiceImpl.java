@@ -7,11 +7,13 @@ import com.ecommerce.ecommerce.repository.BrandRepository;
 import com.ecommerce.ecommerce.service.BrandService;
 import com.ecommerce.ecommerce.util.MapperUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -38,8 +40,10 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
-    public List<Brand> getAllBrands() {
-        return List.of();
+    public List<BrandDto.BrandResponse> getAllBrands() {
+        List<Brand> brands = brandRepository.findAll();
+
+        return MapperUtil.mapList(brands, BrandDto.BrandResponse.class);
     }
 
     @Override
@@ -48,6 +52,7 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
+    @Cacheable(key = "shops", value = "'page:' + #pageable.pageNumber + 'size:' + #pageable.pageSize" )
     public Page<BrandDto.BrandResponse> getAll(Pageable pageable) {
         return brandRepository.findAll(pageable).map(b -> MapperUtil.mapObject(b, BrandDto.BrandResponse.class));
     }
