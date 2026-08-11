@@ -28,7 +28,7 @@ public class ShopUserDetail implements UserDetails {
         // get all authorities of a particular user
         List<GrantedAuthority> authorities = user.getRoles()
                 .stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getRoleStatus().name()))
                 .collect(Collectors.toList());
         String name = user.getFirstName() + user.getLastName();
         return new ShopUserDetail(user.getId(),
@@ -50,6 +50,6 @@ public class ShopUserDetail implements UserDetails {
 
     @Override
     public String getUsername() {
-        return name;
+        return email;
     }
 }
