@@ -8,6 +8,10 @@ public interface GhnService {
 
     GhnDto.GhnOrderResponse createOrder(String token, String shopId, GhnDto.GhnCreateOrderRequest request);
 
+    GhnDto.GhnShippingOrderFeeResponse getShippingFee(String token, String shopId, GhnDto.GhnShippingOrderFeeRequest request);
+
+    GhnDto.GhnLeadTimeResponse getLeadTime(String token, String shopId, GhnDto.GhnLeadTime request);
+
     boolean verifyGhnCredentials(String ghnToken, String shopId);
 
     GhnDto.GhnAddressResponse.GhnShopInfo getInfo(String ghnToken, String ghnShopId);

@@ -13,6 +13,9 @@ import java.util.List;
 
 public interface ShopService {
     ShopDto.ShopResponse createShop(ShopDto.CreateShopRequest request, MultipartFile file) throws IOException;
+
+    ShopDto.ShopInfoResponse getShopInfo(Long productId);
+
     ShopDto.ShopResponse getShopById(Long shopId);
     List<ShopDto.ShopResponse> getAllShops();
     //Shop updateShop(Long shopId, UpdateShopRequest request);

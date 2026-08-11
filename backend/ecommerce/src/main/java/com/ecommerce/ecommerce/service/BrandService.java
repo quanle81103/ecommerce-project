@@ -5,6 +5,7 @@ import com.ecommerce.ecommerce.dao.Brand;
 import com.ecommerce.ecommerce.dto.BrandDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public interface BrandService {
 
     Brand getBrandByName(String name);
 
-    List<Brand> getAllBrands();
+    List<BrandDto.BrandResponse> getAllBrands();
 
     void deleteBrand(Long id);
 

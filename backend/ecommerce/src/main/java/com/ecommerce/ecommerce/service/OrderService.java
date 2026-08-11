@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public interface OrderService {
-    List<OrderDto.OrderResponse> createOrderFromCart(Long userId);
+    OrderDto.OrderResponse createOrderFromCart(Long userId, OrderDto.CreateOrderRequest request);
 
     BigDecimal getTotalAmountOfEachShop(Shop shop, List<CartItem> items);
 
