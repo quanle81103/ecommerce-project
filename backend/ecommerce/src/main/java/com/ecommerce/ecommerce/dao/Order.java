@@ -38,4 +38,8 @@ public class Order {
     @ManyToOne
     @JoinColumn(name = "payment_id")
     private Payment payment;
+
+    private Integer provinceId;
+    private Integer districtId;
+    private String wardCode;
 }

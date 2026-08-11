@@ -55,4 +55,6 @@ public class User {
     )
     private Collection<Role> roles = new HashSet<>();
 
+    @OneToMany(mappedBy = "buyer")
+    private List<Conversation> conversations;
 }

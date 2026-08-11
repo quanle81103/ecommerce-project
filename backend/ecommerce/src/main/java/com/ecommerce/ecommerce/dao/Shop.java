@@ -49,4 +49,7 @@ public class Shop {
     private String fromDistrictName;
 
     private String fromProvinceName;
+
+    @OneToMany(mappedBy = "shop", fetch = FetchType.LAZY)
+    private List<Conversation> conversations;
 }
