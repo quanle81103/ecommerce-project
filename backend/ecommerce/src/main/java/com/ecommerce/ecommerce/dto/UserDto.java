@@ -39,6 +39,9 @@ public abstract class UserDto {
         @NotBlank
         @Size(min = 6, message = "Password must be at least 6 characters")
         private String password;
+
+        @NotBlank
+        private String phone;
     }
 
     @Getter

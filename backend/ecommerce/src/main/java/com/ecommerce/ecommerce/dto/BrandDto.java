@@ -14,6 +14,16 @@ public abstract class BrandDto {
         private String description;
     }
 
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class BrandInfoResponse {
+        private Long id;
+        private String name;
+        private String logoUrl;
+        private int numOfProducts;
+    }
+
     @Getter
     @Setter
     @Builder

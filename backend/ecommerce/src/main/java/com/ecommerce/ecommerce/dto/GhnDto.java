@@ -114,6 +114,155 @@ public abstract class GhnDto {
         }
     }
 
+    @Data
+    @Builder
+    public static class GhnAvailableServiceRequest {
+        private int from_district;
+        private int to_district;
+        private int shop_id;
+    }
+
+    @Data
+    public static class GhnAvailableServiceResponse {
+        private int code;
+        private String message;
+        private List<ServiceData> data;
+
+        @Data
+        public static class ServiceData {
+            @JsonProperty("service_id")
+            private Integer serviceId;
+
+            // nhanh, chuủn, tiết kiệm
+            @JsonProperty("short_name")
+            private String shortName;
+
+            @JsonProperty("service_type_id")
+            private Integer serviceTypeId;
+        }
+    }
+
+    @Data
+    @Builder
+    public static class GhnShippingOrderFeeRequest {
+        private Long shopId;
+        private String serviceName;
+        private String expectedDelivery;
+        @JsonProperty("to_ward_code")
+        private String toWardCode;
+
+        @JsonProperty("to_district_id")
+        private int toDistrictId;
+
+        @JsonProperty("service_type_id")
+        private int serviceTypeId;
+
+        @JsonProperty("insurance_value")
+        private int insuranceValue;
+
+        @JsonProperty("from_district_id")
+        private int fromDistrictId;
+
+        @JsonProperty("from_ward_code")
+        private String fromWardCode;
+        private int weight;
+        private int length;
+        private int width;
+        private int height;
+    }
+
+    // for fe send request
+    @Data
+    public static class GhnShippingFeeRequest {
+        private String toWardCode;
+        private int toDistrictId;
+        private Long shopId;
+    }
+
+       @Data
+    @Builder
+    public static class ShippingFeeResponse {
+        private Long shopId;
+        private Integer total;
+        private String serviceName;
+        private Long expectedDelivery;
+    }
+
+    @Data
+    public static class GhnShippingOrderFeeResponse {
+        private int code;
+        private String message;
+        private ShippingFeeData data;
+//        private String serviceName;
+//        private String expectedDelivery;
+        @Data
+        public static class ShippingFeeData {
+            private Integer total;
+
+            @JsonProperty("service_fee")
+            private Integer serviceFee;
+
+            @JsonProperty("insurance_fee")
+            private Integer insuranceFee;
+
+//            @JsonProperty("pick_station_fee")
+//            private Integer pickStationFee;
+//
+//            @JsonProperty("coupon_value")
+//            private Integer couponValue;
+//
+//            @JsonProperty("r2s_fee")
+//            private Integer r2sFee;
+//
+//            @JsonProperty("document_return")
+//            private Integer documentReturn;
+//
+//            @JsonProperty("double_check")
+//            private Integer doubleCheck;
+//
+//            @JsonProperty("cod_fee")
+//            private Integer codFee;
+//
+//            @JsonProperty("pick_remote_areas_fee")
+//            private Integer pickRemoteAreasFee;
+//
+//            @JsonProperty("deliver_remote_areas_fee")
+//            private Integer deliverRemoteAreasFee;
+//
+//            @JsonProperty("cod_failed_fee")
+//            private Integer codFailedFee;
+        }
+    }
+
+    @Data
+    @Builder
+    public static class GhnLeadTime {
+        @JsonProperty("from_district_id")
+        private int fromDistrictId;
+        @JsonProperty("to_district_id")
+        private int toDistrictId;
+        @JsonProperty("to_ward_code")
+        private String toWardCode;
+        @JsonProperty("service_id")
+        private Integer serviceId;
+        @JsonProperty("from_ward_code")
+        private String fromWardCode;
+        @JsonProperty("shop_id")
+        private Long shopId;
+    }
+
+    @Data
+    public static class GhnLeadTimeResponse {
+        private int code;
+        private String message;
+        private LeadTimeData data;
+
+        @Data
+        public static class LeadTimeData {
+            private String leadtime;
+            private String orderDate;
+        }
+    }
 
     @Data
     public static class GhnConnectRequest {

@@ -10,6 +10,7 @@ public abstract class PaymentDto {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
+    @Data
     public static class VnPayResponse {
         public String code;
         public String message;
@@ -27,5 +28,15 @@ public abstract class PaymentDto {
         private BigDecimal totalAmount;
         private String responseCode;
         private LocalDateTime createAt;
+    }
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class PaymentStatusResponse {
+        private String txnRef;
+        private String status;
+        private Long paymentId;
     }
 }

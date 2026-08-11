@@ -18,5 +18,6 @@ public abstract class CartItemDto {
         private Long productId;
         private String productName;
         private String productUrl;
+        private Long shopId;
     }
 }
