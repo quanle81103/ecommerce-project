@@ -17,7 +17,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Product findByName(String name);
     List<Product> findByCategory_Name(String categoryName);
     List<Product> findByBrand_Name(String brandName);
-
+    Optional<Product> findById(Long id);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Product p WHERE p.id = :id")
     Optional<Product> findByIdForUpdate(@Param("id") Long id);
@@ -29,4 +29,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Modifying
     @Query("UPDATE Product p SET p.inventory = p.inventory + :qty " + "WHERE p.id = :id")
     int restoreInventory(@Param("id") Long id, @Param("qty") int quantity);
+
+    List<Product> findByShop_Id(Long shopId);
+
 }
