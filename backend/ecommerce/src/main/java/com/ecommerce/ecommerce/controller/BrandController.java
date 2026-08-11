@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("${api.prefix}/brands")
 @RequiredArgsConstructor
@@ -29,5 +31,11 @@ public class BrandController {
     @GetMapping
     public ResponseObject<Page<BrandDto.BrandResponse>> getAll(@PageableDefault Pageable pageable) {
         return new ResponseObject<>(HttpStatus.OK, "Success", brandService.getAll(pageable));
+    }
+
+    // seller: add product
+    @GetMapping("/all")
+    public ResponseObject<List<BrandDto.BrandResponse>> getAllBrands(){
+        return new ResponseObject<>(HttpStatus.OK, "Success", brandService.getAllBrands());
     }
 }

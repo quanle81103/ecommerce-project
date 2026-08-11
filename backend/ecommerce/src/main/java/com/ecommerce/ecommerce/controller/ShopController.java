@@ -46,4 +46,14 @@ public class ShopController {
     public ResponseObject<Page<ShopDto.ShopResponse>> getAll(@PageableDefault(size = 10) Pageable pageable) {
         return new ResponseObject<>(HttpStatus.OK, "Success", shopService.getAll(pageable));
     }
+
+    @GetMapping("/shop/{productId}")
+    public ResponseObject<ShopDto.ShopInfoResponse> getShopByProduct(@PathVariable Long productId) {
+        return new ResponseObject<>(HttpStatus.OK, "Success", shopService.getShopInfo(productId));
+    }
+
+    @GetMapping("/shop/my")
+    public ResponseObject<ShopDto.ShopResponse> getMyShop() {
+        return new ResponseObject<>(HttpStatus.OK, "Success", shopService.getByUser());
+    }
 }

@@ -14,8 +14,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -48,10 +50,12 @@ public class ProductController {
     }
 
     @PreAuthorize("hasRole('SHOP_OWNER')")
-    @PostMapping("/product/add")
-    public ResponseObject<ProductDto.ProductResponse> addProduct(@Valid @RequestBody ProductDto.CreateRequest request) {
+    @PostMapping(value = "/product/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseObject<ProductDto.ProductResponse> addProduct(@Valid @ModelAttribute ProductDto.CreateRequest request, @RequestParam("files") List<MultipartFile> files) {
+        log.info("Controller price = {}", request.getPrice());
+
         return new ResponseObject<>(HttpStatus.CREATED, "Success",
-                productService.addProduct(request, AuthUtil.getCurrentUserId()));
+                productService.addProduct(request, AuthUtil.getCurrentUserId(), files));
     }
 
     @PreAuthorize("hasRole('SHOP_OWNER')")
@@ -72,5 +76,11 @@ public class ProductController {
     @GetMapping
     public ResponseObject<Page<ProductDto.ProductResponse>> getAll(@PageableDefault(size = 20) Pageable pageable) {
         return new ResponseObject<>(HttpStatus.OK, "Success", productService.getAllProduct(pageable));
+    }
+
+    @PreAuthorize("hasRole('SHOP_OWNER')")
+    @GetMapping("/my")
+    public ResponseObject<List<ProductDto.ProductResponse>> getProductSOfShop() {
+        return new ResponseObject<>(HttpStatus.OK, "Success", productService.getProductsOfShop());
     }
 }

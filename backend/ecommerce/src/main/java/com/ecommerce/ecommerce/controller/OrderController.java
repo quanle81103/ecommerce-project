@@ -3,12 +3,7 @@ package com.ecommerce.ecommerce.controller;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.ecommerce.ecommerce.dto.OrderDto;
 import com.ecommerce.ecommerce.response.ResponseObject;
@@ -24,9 +19,9 @@ public class OrderController {
     private final OrderServiceImpl orderService;
 
     @PostMapping("/create")
-    public ResponseObject<List<OrderDto.OrderResponse>> createOrderFromCart() {
+    public ResponseObject<OrderDto.OrderResponse> createOrderFromCart(@RequestBody OrderDto.CreateOrderRequest request) {
         return new ResponseObject<>(HttpStatus.CREATED, "Success",
-                orderService.createOrderFromCart(AuthUtil.getCurrentUserId()));
+                orderService.createOrderFromCart(AuthUtil.getCurrentUserId(), request));
     }
 
     @GetMapping("/order/{orderId}")

@@ -16,23 +16,23 @@ public class UserController {
 
     private final UserServiceImpl userService;
 
-    @PostMapping("/user")
+    @PostMapping("/create")
     public ResponseObject<UserDto.UserResponse> createUser(@Valid @RequestBody UserDto.CreateUserRequest request) {
         return new ResponseObject<>(HttpStatus.CREATED, "Success", userService.createUser(request));
     }
 
-    @DeleteMapping("/me")
+    @DeleteMapping("/delete")
     public ResponseObject<Void> deleteUser() {
         userService.deleteUser(AuthUtil.getCurrentUserId());
         return new ResponseObject<>(HttpStatus.OK, "Success", null);
     }
 
-    @GetMapping("/me")
+    @GetMapping("/get")
     public ResponseObject<UserDto.UserResponse> getCurrentUser() {
         return new ResponseObject<>(HttpStatus.OK, "Success", userService.getUserById(AuthUtil.getCurrentUserId()));
     }
 
-    @PutMapping("/me")
+    @PutMapping("/update")
     public ResponseObject<UserDto.UserResponse> updateUser(@Valid @RequestBody UserDto.UpdateUser request) {
         return new ResponseObject<>(HttpStatus.OK, "Success", userService.updateUser(request, AuthUtil.getCurrentUserId()));
     }
