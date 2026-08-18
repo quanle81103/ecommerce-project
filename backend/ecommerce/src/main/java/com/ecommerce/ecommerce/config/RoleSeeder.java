@@ -2,6 +2,7 @@ package com.ecommerce.ecommerce.config;
 
 import java.util.List;
 
+import com.ecommerce.ecommerce.util.status.RoleStatus;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,21 +22,21 @@ public class RoleSeeder implements ApplicationRunner {
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private static final List<String> DEFAULT_ROLES = List.of("ROLE_USER", "ROLE_SHOP_OWNER", "ROLE_ADMIN");
-
+//    private static final List<String> DEFAULT_ROLES = List.of("ROLE_USER", "ROLE_SHOP_OWNER", "ROLE_ADMIN");
     @Override
     public void run(ApplicationArguments args) {
-        for (String name : DEFAULT_ROLES) {
-            if (roleRepository.findByName(name).isEmpty()) {
+        for (RoleStatus name : RoleStatus.values()) {
+            if (!roleRepository.existsByRoleStatus(name)) {
                 Role role = new Role();
-                role.setName(name);
+                role.setRoleStatus(name);
                 roleRepository.save(role);
             }
         }
         String email = "admin@gmail.com";
         String pass = "admin123";
         if (userRepository.findByEmail(email) == null) {
-            Role role = roleRepository.findByName("ROLE_ADMIN").orElseThrow(() -> new ResourceNotFound("ROLE_ADMIN not found"));
+            // this default account will be assigned with admin role
+            Role role = roleRepository.findByRoleStatus(RoleStatus.ADMIN).orElseThrow(() -> new ResourceNotFound("ROLE_ADMIN not found"));
             User admin = new User();
             admin.setEmail(email);
             admin.getRoles().add(role);
