@@ -1,4 +1,4 @@
-package com.ecommerce.ecommerce.util;
+package com.ecommerce.ecommerce.util.Mapper;
 
 import org.modelmapper.ModelMapper;
 

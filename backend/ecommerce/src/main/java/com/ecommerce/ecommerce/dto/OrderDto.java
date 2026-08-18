@@ -29,11 +29,15 @@ public abstract class OrderDto {
     @Setter
     @Builder
     public static class CreateOrderRequest {
-//        private LocalDateTime orderDate;
-//        private BigDecimal totalAmount;
-
         private Integer provinceId;
         private Integer districtId;
         private String wardCode;
+        private List<ShippingFeeRequest> shippingFees;
+
+        @Data
+        public static class ShippingFeeRequest {
+            private Long shopId;
+            private Integer shippingFee;
+        }
     }
 }

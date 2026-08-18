@@ -77,7 +77,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
-        return build(HttpStatus.FORBIDDEN, "Access denied", null);
+        return build(HttpStatus.FORBIDDEN, ex.getMessage() , null);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

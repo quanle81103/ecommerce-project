@@ -2,20 +2,20 @@ package com.ecommerce.ecommerce.util.Mapper;
 
 import com.ecommerce.ecommerce.dao.Image;
 import com.ecommerce.ecommerce.dao.Order;
+import com.ecommerce.ecommerce.dao.OrderItem;
 import com.ecommerce.ecommerce.dao.Product;
 import com.ecommerce.ecommerce.dto.ImageDto;
 import com.ecommerce.ecommerce.dto.ProductDto;
 import com.ecommerce.ecommerce.dto.SellerDto;
 import com.ecommerce.ecommerce.serviceImpl.S3ServiceImpl;
-import com.ecommerce.ecommerce.util.MapperUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.math.BigDecimal;
 
 @Component
 @RequiredArgsConstructor
-public class ProductMapper {
+public class MapperObjectResponse {
 
     private final S3ServiceImpl s3Service;
 
@@ -44,7 +44,7 @@ public class ProductMapper {
         return response;
     }
 
-    private SellerDto.OrderResponse toResponse(Order order) {
+    public SellerDto.OrderResponse toOrderResponse(Order order) {
 
         return SellerDto.OrderResponse.builder()
                 .id(order.getId())
@@ -52,9 +52,36 @@ public class ProductMapper {
                 .customerPhone(order.getUser().getPhone())
                 .createdAt(order.getOrderDate())
                 .subtotal(order.getTotalAmount())
-                .shippingFee(order.getShippingOrder().getShippingFee() == null ? 0 : order.getShippingOrder().getShippingFee())
-                .total(order.getPayment().getTotalAmount())
+                .shippingFee(order.getShippingFee())
+                .total(order.getTotalAmount().add(BigDecimal.valueOf(order.getShippingFee())))
                 .status(order.getOrderStatus())
                 .build();
+    }
+
+    public SellerDto.OrderDetailResponse toOrderDetailResponse(Order order) {
+        return SellerDto.OrderDetailResponse.builder().id(order.getId())
+                .createdAt(order.getOrderDate())
+                .customerName(order.getUser().getFirstName() + " " + order.getUser().getLastName())
+                .customerPhone(order.getUser().getPhone())
+                .shippingFee(order.getShippingFee())
+                .status(order.getOrderStatus())
+                .customerAddress(order.getUser().getPlace())
+                .shippingCode(order.getShippingOrder() == null ? null : order.getShippingOrder().getGhnOrderCode())
+                .expectedDelivery(order.getShippingOrder() == null ? null : order.getShippingOrder().getExpectedDeliveryTime())
+                .subtotal(order.getTotalAmount())
+                .total(order.getTotalAmount().add(BigDecimal.valueOf(order.getShippingFee())))
+                .items(order.getOrderitems().stream().map(this::toOrderItem).toList())
+                .build();
+    }
+
+    private SellerDto.OrderDetailResponse.OrderItemResponse toOrderItem(OrderItem orderItem) {
+        StringBuilder imageUrl = new StringBuilder();
+        for (Image image: orderItem.getProduct().getImage()) {
+            imageUrl.append(image.getImageKey());
+        }
+        return SellerDto.OrderDetailResponse.OrderItemResponse.builder().productId(orderItem.getProduct().getId())
+                .productName(orderItem.getProduct().getName()).quantity(orderItem.getQuantity())
+                .weight(orderItem.getWeight()).image(String.valueOf(imageUrl))
+                .unitPrice(orderItem.getUnitPrice()).build();
     }
 }
