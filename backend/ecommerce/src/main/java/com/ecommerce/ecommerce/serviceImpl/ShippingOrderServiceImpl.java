@@ -2,6 +2,7 @@ package com.ecommerce.ecommerce.serviceImpl;
 
 import com.ecommerce.ecommerce.dao.*;
 import com.ecommerce.ecommerce.dto.GhnDto;
+import com.ecommerce.ecommerce.exception.BusinessException;
 import com.ecommerce.ecommerce.exception.ResourceNotFound;
 import com.ecommerce.ecommerce.repository.OrderRepository;
 import com.ecommerce.ecommerce.repository.PaymentRepository;
@@ -11,9 +12,12 @@ import com.ecommerce.ecommerce.util.status.OrderStatus;
 import com.ecommerce.ecommerce.util.status.ShippingStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.AccessDeniedException;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -64,22 +68,11 @@ public class ShippingOrderServiceImpl {
 
     }
 
-    public void createShippingOrder(Order order) {
+    public ShippingOrder createShippingOrder(Order order) {
         Shop shop = order.getShop();
-
         GhnDto.GhnCreateOrderRequest req = buildGhnRequest(order);
-
-        GhnDto.GhnOrderResponse response =
-                ghnService.createOrder(
-                        shop.getGhnToken(),
-                        String.valueOf(shop.getGhnShopId()),
-                        req);
-
-        LocalDateTime time =
-                Instant.parse(response.getData().getExpectedDeliveryTime())
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDateTime();
-
+        GhnDto.GhnOrderResponse response = ghnService.createOrder(shop.getGhnToken(),String.valueOf(shop.getGhnShopId()),req);
+        LocalDateTime time = Instant.parse(response.getData().getExpectedDeliveryTime()).atZone(ZoneId.systemDefault()).toLocalDateTime();
         ShippingOrder shippingOrder = ShippingOrder.builder()
                         .ghnOrderCode(response.getData().getOrderCode())
                         .shippingFee(response.getData().getTotalFee())
@@ -89,26 +82,25 @@ public class ShippingOrderServiceImpl {
                         .order(order)
                         .build();
 
-        shippingOrderRepository.save(shippingOrder);
+        return shippingOrderRepository.save(shippingOrder);
     }
 
     @Transactional
-    public void createShippingOrders(Long paymentId) {
-        Payment payment = paymentRepository.findById(paymentId).orElseThrow(() -> new ResourceNotFound("Payment with id [%s] not found".formatted(paymentId)));
-        for (Order order : payment.getOrders()) {
-            if (order.getOrderStatus() != OrderStatus.PAID) {
-                continue;
-            }
-            try {
-                createShippingOrder(order);
-                order.setOrderStatus(OrderStatus.SHIPPING);
-            } catch (Exception e) {
-                log.error("Create shipping failer for order {}", order.getId(), e);
-                order.setOrderStatus(OrderStatus.PROCESSING);
-            }
-//            createShippingOrder(order);
-//            order.setOrderStatus(OrderStatus.SHIPPING);
-            orderRepository.save(order);
+    public void handover(Long sellerId, Long orderId) {
+
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFound("Order with id [%s] not found".formatted(orderId)));
+
+        if(!order.getShop().getUser().getId().equals(sellerId)){
+            throw new AccessDeniedException("Unauthorized");
         }
+
+        if(order.getOrderStatus()!=OrderStatus.PAID){
+            throw new BusinessException(HttpStatus.CONFLICT, "Only PAID orders can be handover");
+        }
+
+        ShippingOrder shippingOrder = createShippingOrder(order);
+        order.setShippingOrder(shippingOrder);
+        order.setOrderStatus(OrderStatus.SHIPPING);
+        orderRepository.save(order);
     }
 }

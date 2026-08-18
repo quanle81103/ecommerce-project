@@ -9,14 +9,12 @@ import com.ecommerce.ecommerce.repository.MessageRepository;
 import com.ecommerce.ecommerce.repository.ConversationRepository;
 import com.ecommerce.ecommerce.repository.UserRepository;
 import com.ecommerce.ecommerce.service.MessageService;
-import com.ecommerce.ecommerce.util.MapperUtil;
 import com.ecommerce.ecommerce.util.MessageType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor

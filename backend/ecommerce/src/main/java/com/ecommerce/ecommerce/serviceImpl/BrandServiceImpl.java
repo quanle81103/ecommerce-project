@@ -5,7 +5,7 @@ import com.ecommerce.ecommerce.dto.BrandDto;
 import com.ecommerce.ecommerce.exception.ResourceNotFound;
 import com.ecommerce.ecommerce.repository.BrandRepository;
 import com.ecommerce.ecommerce.service.BrandService;
-import com.ecommerce.ecommerce.util.MapperUtil;
+import com.ecommerce.ecommerce.util.Mapper.MapperUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -13,7 +13,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor

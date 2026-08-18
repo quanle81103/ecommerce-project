@@ -6,7 +6,7 @@ import com.ecommerce.ecommerce.repository.CategoryRepository;
 import com.ecommerce.ecommerce.service.CategoryService;
 import com.ecommerce.ecommerce.dao.Category;
 import com.ecommerce.ecommerce.exception.ResourceNotFound;
-import com.ecommerce.ecommerce.util.MapperUtil;
+import com.ecommerce.ecommerce.util.Mapper.MapperUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

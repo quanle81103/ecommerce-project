@@ -12,7 +12,7 @@ import com.ecommerce.ecommerce.repository.ShopRepository;
 import com.ecommerce.ecommerce.repository.UserRepository;
 import com.ecommerce.ecommerce.service.ShopService;
 import com.ecommerce.ecommerce.util.AuthUtil;
-import com.ecommerce.ecommerce.util.MapperUtil;
+import com.ecommerce.ecommerce.util.Mapper.MapperUtil;
 import com.ecommerce.ecommerce.util.status.RoleStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

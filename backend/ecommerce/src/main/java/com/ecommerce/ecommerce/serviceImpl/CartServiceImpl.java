@@ -9,7 +9,7 @@ import com.ecommerce.ecommerce.exception.ResourceNotFound;
 import com.ecommerce.ecommerce.repository.CartItemRepository;
 import com.ecommerce.ecommerce.repository.CartRepository;
 import com.ecommerce.ecommerce.service.CartService;
-import com.ecommerce.ecommerce.util.MapperUtil;
+import com.ecommerce.ecommerce.util.Mapper.MapperUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

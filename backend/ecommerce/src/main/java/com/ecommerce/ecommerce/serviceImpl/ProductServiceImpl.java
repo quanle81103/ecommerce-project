@@ -1,15 +1,14 @@
 package com.ecommerce.ecommerce.serviceImpl;
 
 import com.ecommerce.ecommerce.dao.*;
-import com.ecommerce.ecommerce.dto.ImageDto;
 import com.ecommerce.ecommerce.dto.ProductDto;
 import com.ecommerce.ecommerce.exception.ResourceNotFound;
 import com.ecommerce.ecommerce.exception.ResourceAlreadyExist;
 import com.ecommerce.ecommerce.repository.*;
 import com.ecommerce.ecommerce.service.ProductService;
 import com.ecommerce.ecommerce.util.AuthUtil;
-import com.ecommerce.ecommerce.util.Mapper.ProductMapper;
-import com.ecommerce.ecommerce.util.MapperUtil;
+import com.ecommerce.ecommerce.util.Mapper.MapperObjectResponse;
+import com.ecommerce.ecommerce.util.Mapper.MapperUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -33,13 +32,13 @@ public class ProductServiceImpl implements ProductService {
     private final BrandRepository brandRepository;
     private final S3ServiceImpl s3Service;
     private final ImageRepository imageRepository;
-    private final ProductMapper productMapper;
+    private final MapperObjectResponse mapperObjectResponse;
 
     @Override
     public ProductDto.ProductResponse getProductById(Long id) {
         Product product = productRepository.findById(id).orElseThrow(() -> new ResourceNotFound("Product with id [%s] not found".formatted(id)));
 
-        return productMapper.toResponse(product);
+        return mapperObjectResponse.toResponse(product);
     }
 
     public Product createProduct(ProductDto.CreateRequest request, Brand brand, Category category, Shop shop, List<MultipartFile> files) {
@@ -119,7 +118,7 @@ public class ProductServiceImpl implements ProductService {
 
         log.info("Service price = {}", request.getPrice());
         Product product = createProduct(request, brand, category, shop, files);
-        return productMapper.toResponse(product);
+        return mapperObjectResponse.toResponse(product);
     }
 
     @Override
@@ -161,24 +160,24 @@ public class ProductServiceImpl implements ProductService {
 //        return MapperUtil.mapList(productRepository.findByCategory_Name(category.getName()), ProductDto.ProductResponse.class);
         return productRepository.findByCategory_Name(category.getName())
                 .stream()
-                .map(productMapper::toResponse)
+                .map(mapperObjectResponse::toResponse)
                 .toList();
     }
 
     @Override
     public List<ProductDto.ProductResponse> getProductByBrand(Brand brand) {
         return productRepository.findByBrand_Name(brand.getName())
-                .stream().map(productMapper::toResponse).toList();
+                .stream().map(mapperObjectResponse::toResponse).toList();
     }
 
     @Override
     public List<ProductDto.ProductResponse> getAllProduct() {
-        return productRepository.findAll().stream().map(productMapper::toResponse).toList();
+        return productRepository.findAll().stream().map(mapperObjectResponse::toResponse).toList();
     }
 
     @Override
     public Page<ProductDto.ProductResponse> getAllProduct(Pageable pageable) {
-        return productRepository.findAll(pageable).map(productMapper::toResponse);
+        return productRepository.findAll(pageable).map(mapperObjectResponse::toResponse);
     }
 
     public List<ProductDto.ProductResponse> getProductsOfShop() {

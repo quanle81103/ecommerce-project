@@ -10,11 +10,9 @@ import com.ecommerce.ecommerce.exception.ResourceNotFound;
 import com.ecommerce.ecommerce.repository.ConversationRepository;
 import com.ecommerce.ecommerce.repository.MessageRepository;
 import com.ecommerce.ecommerce.repository.ShopRepository;
-import com.ecommerce.ecommerce.repository.UserRepository;
 import com.ecommerce.ecommerce.util.AuthUtil;
-import com.ecommerce.ecommerce.util.MapperUtil;
+import com.ecommerce.ecommerce.util.Mapper.MapperUtil;
 import lombok.RequiredArgsConstructor;
-import org.mapstruct.Mapper;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 

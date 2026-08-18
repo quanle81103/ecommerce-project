@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.ecommerce.ecommerce.dto.GhnDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -32,7 +31,7 @@ import com.ecommerce.ecommerce.repository.ProductRepository;
 import com.ecommerce.ecommerce.repository.ShopRepository;
 import com.ecommerce.ecommerce.repository.UserRepository;
 import com.ecommerce.ecommerce.service.OrderService;
-import com.ecommerce.ecommerce.util.MapperUtil;
+import com.ecommerce.ecommerce.util.Mapper.MapperUtil;
 import com.ecommerce.ecommerce.util.status.OrderStatus;
 import com.ecommerce.ecommerce.util.status.PaymentStatus;
 
@@ -50,7 +49,6 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemRepository orderItemRepository;
     private final UserServiceImpl userService;
     private final PaymentRepository paymentRepository;
-
     @Transactional
     @Override
     public OrderDto.OrderResponse createOrderFromCart(Long userId, OrderDto.CreateOrderRequest request) {
@@ -58,12 +56,19 @@ public class OrderServiceImpl implements OrderService {
         Cart cart = cartRepository.findIdByUser_Id(userId).orElseThrow(() -> new ResourceNotFound("Cart not found with user [%s]".formatted(userId)));
         Map<Long, List<CartItem>> itemGroupedByShop = groupCartItemsByShop(cart);
         BigDecimal totalAmount = BigDecimal.ZERO;
+        // equal quantity * unitprice + shipping fee
+        BigDecimal shippingFeeOfOrder = BigDecimal.ZERO;
+        Map<Long, Integer> shippingMap = request.getShippingFees().stream().collect
+                (Collectors.toMap(OrderDto.CreateOrderRequest.ShippingFeeRequest::getShopId, OrderDto.CreateOrderRequest.ShippingFeeRequest::getShippingFee));
         // split specific shop of a particular cart
         for (Long shopId : itemGroupedByShop.keySet()) {
             Shop shop = shopRepository.findById(shopId).orElseThrow(() -> new ResourceNotFound("Shop with id [%s] not found".formatted(shopId)));
             // this order will store all products user buy on a particular shop
             Order order = createOrder(userId, shop, request);
-            orderRepository.save(order);
+            Integer fee = shippingMap.get(shop.getId());
+            order.setShippingFee(fee);
+            order = orderRepository.save(order);
+            shippingFeeOfOrder = shippingFeeOfOrder.add(BigDecimal.valueOf(fee));
             List<CartItem> items = itemGroupedByShop.get(shopId);
             for (CartItem item : items) {
                 Product product = productRepository.findByIdForUpdate(item.getProduct().getId())
@@ -90,7 +95,7 @@ public class OrderServiceImpl implements OrderService {
         }
         Payment payment = new Payment();
         payment.setOrders(orders);
-        payment.setTotalAmount(totalAmount);
+        payment.setTotalAmount(totalAmount.add(shippingFeeOfOrder));
         payment.setCreateAt(LocalDateTime.now());
         payment.setPaymentStatus(PaymentStatus.PENDING);
         payment.setTxnRef(String.valueOf(System.currentTimeMillis()));
@@ -104,7 +109,6 @@ public class OrderServiceImpl implements OrderService {
 
         cart.getCartItems().clear();
         cartRepository.save(cart);
-//        return MapperUtil.mapList(orders,OrderDto.OrderResponse.class);
         List<OrderDto.OrderResponse.Response> responses = orders.stream()
                 .map(order -> OrderDto.OrderResponse.Response.builder()
                         .id(order.getId()).totalAmount(order.getTotalAmount()).build()).toList();
@@ -173,8 +177,8 @@ public class OrderServiceImpl implements OrderService {
             throw new BusinessException(HttpStatus.FORBIDDEN, "You cannot cancel this order");
         }
 
-        if (order.getOrderStatus() != OrderStatus.PENDING) {
-            throw new BusinessException(HttpStatus.CONFLICT, "Only PENDING orders can be cancelled");
+        if (order.getOrderStatus() != OrderStatus.PAID) {
+            throw new BusinessException(HttpStatus.CONFLICT, "Only PAID orders can be cancelled");
         }
 
         order.setOrderStatus(OrderStatus.CANCELLED);
