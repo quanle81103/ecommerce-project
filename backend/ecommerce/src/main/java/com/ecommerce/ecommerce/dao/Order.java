@@ -39,6 +39,12 @@ public class Order {
     @JoinColumn(name = "payment_id")
     private Payment payment;
 
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+    private ShippingOrder shippingOrder;
+
+    @Column(nullable = false)
+    private Integer shippingFee = 0;
+
     private Integer provinceId;
     private Integer districtId;
     private String wardCode;

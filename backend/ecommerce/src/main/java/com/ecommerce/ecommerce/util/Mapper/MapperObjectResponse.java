@@ -1,9 +1,11 @@
 package com.ecommerce.ecommerce.util.Mapper;
 
 import com.ecommerce.ecommerce.dao.Image;
+import com.ecommerce.ecommerce.dao.Order;
 import com.ecommerce.ecommerce.dao.Product;
 import com.ecommerce.ecommerce.dto.ImageDto;
 import com.ecommerce.ecommerce.dto.ProductDto;
+import com.ecommerce.ecommerce.dto.SellerDto;
 import com.ecommerce.ecommerce.serviceImpl.S3ServiceImpl;
 import com.ecommerce.ecommerce.util.MapperUtil;
 import lombok.RequiredArgsConstructor;
@@ -40,5 +42,19 @@ public class ProductMapper {
         response.setImageUrl(s3Service.getFileUrl(image.getImageKey()));
 
         return response;
+    }
+
+    private SellerDto.OrderResponse toResponse(Order order) {
+
+        return SellerDto.OrderResponse.builder()
+                .id(order.getId())
+                .customerName(order.getUser().getFirstName() + " " + order.getUser().getLastName())
+                .customerPhone(order.getUser().getPhone())
+                .createdAt(order.getOrderDate())
+                .subtotal(order.getTotalAmount())
+                .shippingFee(order.getShippingOrder().getShippingFee() == null ? 0 : order.getShippingOrder().getShippingFee())
+                .total(order.getPayment().getTotalAmount())
+                .status(order.getOrderStatus())
+                .build();
     }
 }
