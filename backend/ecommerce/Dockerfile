@@ -1,18 +1,24 @@
-FROM maven:3.9.6-eclipse-temurin-21 AS build
-WORKDIR /app
+FROM maven:3.9.9-eclipse-temurin-21 AS build
+WORKDIR /workspace
 
 COPY pom.xml .
-RUN mvn dependency:go-offline
+RUN mvn -B -ntp dependency:go-offline
 
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN mvn -B -ntp clean package -DskipTests
 
-FROM eclipse-temurin:21-jdk
+FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
-COPY --from=build /app/target/ecommerce-0.0.1-SNAPSHOT.jar app.jar
+RUN groupadd --system spring && useradd --system --gid spring spring
+
+COPY --from=build --chown=spring:spring /workspace/target/ecommerce-0.0.1-SNAPSHOT.jar app.jar
+
+USER spring:spring
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=docker"]
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar", "--spring.profiles.active=docker"]
