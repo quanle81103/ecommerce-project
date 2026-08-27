@@ -1,101 +1,38 @@
 import { useEffect, useState } from "react";
-import { responseBanner } from "../../services/dataService";
+import heroFallback from "../../src/assets/hero.png";
 
-export default function HeroBanner({ banners }) {
-
+export default function HeroBanner({ banners = [], loading = false }) {
     const [currentIndex, setCurrentIndex] = useState(0);
+    const slides = banners.length ? banners : [{ id: "fallback", bannerUrl: heroFallback }];
 
-    // logic previous/next banner
     useEffect(() => {
-        if (banners.length === 0) return;
+        if (slides.length < 2) return undefined;
+        const timer = window.setInterval(() => setCurrentIndex((index) => (index + 1) % slides.length), 5000);
+        return () => window.clearInterval(timer);
+    }, [slides.length]);
 
-        const timer = setInterval(() => {
-            setCurrentIndex((prev) =>
-                prev === banners.length - 1 ? 0 : prev + 1
-            );
-        }, 3000);
+    useEffect(() => { if (currentIndex >= slides.length) setCurrentIndex(0); }, [currentIndex, slides.length]);
 
-        return () => clearInterval(timer);
-    }, [banners]);
+    if (loading) return <div className="app-container mt-5"><div className="h-52 animate-pulse rounded-2xl bg-slate-200 sm:h-80 lg:h-96" /></div>;
 
-    const nextBanner = () => {
-        setCurrentIndex((prev) =>
-            prev === banners.length - 1 ? 0 : prev + 1
-        );
-    };
+    const changeSlide = (step) => setCurrentIndex((index) => (index + step + slides.length) % slides.length);
 
-    const prevBanner = () => {
-        setCurrentIndex((prev) =>
-            prev === 0 ? banners.length - 1 : prev - 1
-        );
-    };
-    
     return (
-        <div className="relative max-w-full mx-auto mt-4 flex gap-2 ">
-            <img
-                src={banners[currentIndex]?.bannerUrl}
-                alt="Banner"
-                className="w-1/2 h-96 object-cover rounded-xl shadow-lg"
-            />
-
-            <img 
-                src={banners[(currentIndex + 1) % banners.length]?.bannerUrl} 
-                alt="Banner" 
-                className="w-1/2 h-96 object-cover rounded-xl shadow-lg"
-            />
-
-            {/* Nút trái */}
-            <button
-                onClick={prevBanner}
-                className="
-                    absolute
-                    left-4
-                    top-1/2
-                    -translate-y-1/2
-                    bg-white/80
-                    hover:bg-white
-                    px-3
-                    py-2
-                    rounded-full
-                    shadow
-                "
-            >
-                ❮
-            </button>
-
-            {/* Nút phải */}
-            <button
-                onClick={nextBanner}
-                className="
-                    absolute
-                    right-4
-                    top-1/2
-                    -translate-y-1/2
-                    bg-white/80
-                    hover:bg-white
-                    px-3
-                    py-2
-                    rounded-full
-                    shadow
-                "
-            >
-                ❯
-            </button>
-
-            {/* Dots */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                {banners.map((_, index) => (
-                    <button
-                        key={index}
-                        onClick={() => setCurrentIndex(index)}
-                        className={`w-3 h-3 rounded-full ${
-                            currentIndex === index
-                                ? "bg-white"
-                                : "bg-white/50"
-                        }`}
-                    />
-                ))}
+        <section className="app-container mt-5" aria-label="Khuyến mãi nổi bật">
+            <div className="relative overflow-hidden rounded-2xl bg-slate-200 shadow-sm">
+                <img src={slides[currentIndex]?.bannerUrl || heroFallback} alt="Khuyến mãi mua sắm nổi bật" className="h-52 w-full object-cover sm:h-80 lg:h-96" />
+                {slides.length > 1 && (
+                    <>
+                        <button type="button" aria-label="Banner trước" onClick={() => changeSlide(-1)} className="absolute left-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-xl shadow hover:bg-white">‹</button>
+                        <button type="button" aria-label="Banner tiếp theo" onClick={() => changeSlide(1)} className="absolute right-3 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-xl shadow hover:bg-white">›</button>
+                        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-2">
+                            {slides.map((slide, index) => (
+                                <button key={slide.id || index} type="button" aria-label={`Xem banner ${index + 1}`} onClick={() => setCurrentIndex(index)} className={`h-2.5 rounded-full transition-all ${currentIndex === index ? "w-7 bg-white" : "w-2.5 bg-white/60"}`} />
+                            ))}
+                        </div>
+                    </>
+                )}
             </div>
-        </div>
+        </section>
     );
 }

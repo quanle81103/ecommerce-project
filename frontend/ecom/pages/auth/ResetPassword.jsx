@@ -1,63 +1,24 @@
-import { FaLongArrowAltLeft } from "react-icons/fa";
-import { Link, useSearchParams } from "react-router-dom";
 import { useState } from "react";
-import { resetPasswordSchema } from "../../utils/authSchema";
-import { responseResetPassword } from "../../services/authService";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
+import { responseResetPassword } from "../../services/authService";
+import { resetPasswordSchema } from "../../utils/authSchema";
 
 export default function ResetPassword() {
+    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-
     const rawToken = searchParams.get("token");
-
-    const [password, setPassword] = useState("");
-    const [confirmPassword,setConfirmPassword] = useState("");
-
-    async function handleResetPassword() {
-        const result = resetPasswordSchema.safeParse({password, confirmPassword});
-
-        if (!result.success) {
-            toast.error(result.error.issues[0].message);
-            return;
-        }
-
-        try {
-            const res = await responseResetPassword(rawToken, password);
-            toast.message("Đổi mật khẩu thành công");
-        } catch (error) {
-            console.log(error.message);
-            toast.error("Đổi mật khẩu thất bại");
-        }
-    }
-
-    return (
-        <div className="h-full flex justify-center items-center bg-cyan-100">
-            <div className="w-96 bg-white rounded-xl shadow-lg p-6 flex flex-col gap-4">
-                <h1 className="text-2xl text-center font-bold">
-                    Reset Password
-                </h1>
-
-                <input
-                    type="password"
-                    placeholder="Mật khẩu mới"
-                    className="border p-2 rounded"
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-
-                <input
-                    type="password"
-                    placeholder="Xác nhận mật khẩu"
-                    className="border p-2 rounded"
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-
-                <button
-                    className="bg-cyan-600 text-white p-2 rounded"
-                    onClick={handleResetPassword}
-                >
-                    Xác nhận
-                </button>
-            </div>
-        </div>
-    )
+    const [form, setForm] = useState({ password: "", confirmPassword: "" });
+    const [errors, setErrors] = useState({});
+    const [submitting, setSubmitting] = useState(false);
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        if (!rawToken) { toast.error("Liên kết đặt lại mật khẩu không hợp lệ."); return; }
+        const result = resetPasswordSchema.safeParse(form);
+        if (!result.success) { setErrors(Object.fromEntries(result.error.issues.map((issue) => [issue.path[0], issue.message]))); return; }
+        setSubmitting(true);
+        try { await responseResetPassword(rawToken, form.password); toast.success("Đổi mật khẩu thành công."); navigate("/login", { replace: true }); } catch (error) { toast.error(error.response?.data?.message || "Không thể đổi mật khẩu."); } finally { setSubmitting(false); }
+    };
+    if (!rawToken) return <div className="app-container grid min-h-[65vh] place-items-center py-10"><div className="surface-card max-w-md p-8 text-center"><h1 className="text-2xl font-bold">Liên kết không hợp lệ</h1><p className="mt-3 text-slate-500">Vui lòng yêu cầu một liên kết đặt lại mật khẩu mới.</p><Link to="/forget-password" className="primary-button mt-6">Yêu cầu liên kết mới</Link></div></div>;
+    return <div className="app-container grid min-h-[65vh] place-items-center py-10"><form onSubmit={handleSubmit} className="surface-card w-full max-w-md p-6 sm:p-8"><h1 className="text-2xl font-bold">Đặt lại mật khẩu</h1><label className="mt-6 block text-sm font-semibold">Mật khẩu mới<input type="password" autoComplete="new-password" value={form.password} onChange={(event) => setForm((value) => ({ ...value, password: event.target.value }))} className="field-control mt-2" />{errors.password && <span className="mt-1 block font-normal text-red-600">{errors.password}</span>}</label><label className="mt-5 block text-sm font-semibold">Xác nhận mật khẩu<input type="password" autoComplete="new-password" value={form.confirmPassword} onChange={(event) => setForm((value) => ({ ...value, confirmPassword: event.target.value }))} className="field-control mt-2" />{errors.confirmPassword && <span className="mt-1 block font-normal text-red-600">{errors.confirmPassword}</span>}</label><button type="submit" disabled={submitting} className="primary-button mt-6 w-full">{submitting ? "Đang cập nhật..." : "Cập nhật mật khẩu"}</button></form></div>;
 }

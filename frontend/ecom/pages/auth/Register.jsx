@@ -1,109 +1,60 @@
-import { Link } from "react-router-dom"
-import { FaLongArrowAltLeft, FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa"
-import { useState } from "react"
-export default function Register() {
+import { useState } from "react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { registerUser } from "../../services/authService";
+import { registerSchema } from "../../utils/authSchema";
 
+const initialForm = { firstName: "", lastName: "", email: "", phone: "", place: "", password: "", confirmPassword: "" };
+
+export default function Register() {
+    const navigate = useNavigate();
+    const [form, setForm] = useState(initialForm);
+    const [errors, setErrors] = useState({});
     const [showPassword, setShowPassword] = useState(false);
-    const [password, setPassword] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const updateField = (event) => setForm((value) => ({ ...value, [event.target.name]: event.target.value }));
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        const result = registerSchema.safeParse(form);
+        if (!result.success) {
+            setErrors(Object.fromEntries(result.error.issues.map((issue) => [issue.path[0], issue.message])));
+            return;
+        }
+        setErrors({});
+        setSubmitting(true);
+        try {
+            const { confirmPassword, ...request } = result.data;
+            void confirmPassword;
+            await registerUser(request);
+            toast.success("Tạo tài khoản thành công. Hãy đăng nhập.");
+            navigate("/login", { replace: true });
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Không thể tạo tài khoản.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const field = (name, label, type = "text", autoComplete) => (
+        <label className="block text-sm font-semibold">{label}<input name={name} type={type} autoComplete={autoComplete} value={form[name]} onChange={updateField} className="field-control mt-2 font-normal" aria-invalid={Boolean(errors[name])} />{errors[name] && <span className="mt-1 block font-normal text-red-600">{errors[name]}</span>}</label>
+    );
 
     return (
-        <div className="flex h-screen justify-center items-center bg-linear-to-r from-cyan-500 to-blue-500">
-            <form className="flex flex-col bg-white/90 w-200 rounded-2xl shadow-2xl p-8 gap-5">
-                <div className="relative">
-                    <Link to="/" className="absolute left-2">
-                        <FaLongArrowAltLeft />
-                    </Link>
+        <div className="app-container grid min-h-[70vh] place-items-center py-10">
+            <form onSubmit={handleSubmit} className="surface-card w-full max-w-2xl p-6 sm:p-8" noValidate>
+                <p className="text-sm font-bold uppercase tracking-wider text-orange-600">Tài khoản mới</p><h1 className="mt-1 text-3xl font-bold">Đăng ký</h1>
+                <div className="mt-7 grid gap-5 sm:grid-cols-2">{field("lastName", "Họ", "text", "family-name")}{field("firstName", "Tên", "text", "given-name")}</div>
+                <div className="mt-5 grid gap-5 sm:grid-cols-2">{field("email", "Email", "email", "email")}{field("phone", "Số điện thoại", "tel", "tel")}</div>
+                <div className="mt-5">{field("place", "Địa chỉ", "text", "street-address")}</div>
+                <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                    <label className="block text-sm font-semibold">Mật khẩu<div className="relative mt-2"><input name="password" type={showPassword ? "text" : "password"} autoComplete="new-password" value={form.password} onChange={updateField} className="field-control pr-12 font-normal" /><button type="button" aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setShowPassword((value) => !value)} className="absolute right-1 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center">{showPassword ? <FaEyeSlash /> : <FaEye />}</button></div>{errors.password && <span className="mt-1 block font-normal text-red-600">{errors.password}</span>}</label>
+                    {field("confirmPassword", "Xác nhận mật khẩu", showPassword ? "text" : "password", "new-password")}
                 </div>
-
-                <h1 className="text-center text-2xl">Register Form</h1>
-                <div className="flex gap-3">
-                    <div className="relative flex-1">
-                        <label className="block text-sm mb-1 font-medium">
-                            First Name
-                        </label>
-
-                        <FaUser className="absolute left-3 top-10 text-gray-500 hover:text-cyan-600 transition duration-300"/>
-
-                        <input
-                            type="text"
-                            placeholder="John"
-                            className="w-full pl-10 p-2 border rounded-lg"/>
-                    </div>
-
-                    <div className="relative flex-1">
-                        <label className="block text-sm mb-1 font-medium">
-                            Second Name
-                        </label>
-
-                        <FaUser className="absolute left-3 top-10  text-gray-500 hover:text-cyan-600 transition duration-300"/>
-
-                        <input
-                            type="text"
-                            placeholder="John"
-                            className="w-full pl-10 p-2 border rounded-lg"
-                        />
-                    </div>
-                </div>
-                <div className="relative flex-1">
-                    <label className="block text-sm font-medium mb-2">
-                        Email:
-                    </label>
-                    <FaEnvelope 
-                        className="absolute top-10 left-3 text-gray-500 hover:text-cyan-300 transition duration-200"/>
-                    <input 
-                        type="email" 
-                        className="border rounded-lg w-full p-2 pl-10"
-                        placeholder="xxxxxx@gmail.com"/>
-                
-                </div>
-                <div className="relative flex-1">
-                    <label className="text-sm font-medium block mb-2">
-                        Password:
-                    </label>
-                    <FaLock className="absolute left-3 top-10 text-gray-500 hover:text-cyan-600"/>
-                    <input 
-                        type={showPassword ? "text" : "password"} 
-                        name="password"
-                        id="passwordId"
-                        className="w-full border rounded-lg p-2 pl-10"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                    <button type="button" onClick={(e) => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 ">
-                        {showPassword ? <FaEyeSlash /> : <FaEye /> }
-                    </button>
-                </div>
-
-                <div className="relative flex gap-8">
-                    <div className="">
-                        <label className="text-sm font-medium block mb-2">Town:</label>
-                        
-                        <input type="text" className="w-full border rounded-lg p-2 text-gray-500"/>
-                    </div>
-                    <div className="">
-                        <label className="text-sm font-medium block mb-2">District:</label>
-                        
-                        <input type="text" className="w-full border rounded-lg p-2 text-gray-500"/>
-                    </div>
-                    <div className="">
-                        <label className="text-sm font-medium block mb-2">Province:</label>
-                        
-                        <input type="text" className="w-full border rounded-lg p-2 text-gray-500"/>   
-                    </div>
-                </div>
-                <div className="flex justify-end gap-2">
-
-                    <button className="border rounded p-2 bg-red-500 hover:bg-red-700 hover:scale-105 transition dur" type="reset">Clear</button>
-                    
-                    <button className="border rounded p-2 bg-cyan-600" type="submit">Save</button>
-                </div>
-                <div className="text-center hover:text-cyan-600">
-                    <p>Already have an account?</p>
-                    <Link to='/'>
-                        Login
-                    </Link>
-                </div>
+                <button type="submit" disabled={submitting} className="primary-button mt-7 w-full">{submitting ? "Đang tạo tài khoản..." : "Tạo tài khoản"}</button>
+                <p className="mt-6 text-center text-sm text-slate-600">Đã có tài khoản? <Link to="/login" className="font-bold text-orange-600 hover:underline">Đăng nhập</Link></p>
             </form>
         </div>
-    )   
+    );
 }

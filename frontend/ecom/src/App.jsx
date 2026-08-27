@@ -1,75 +1,96 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { Toaster } from 'sonner';
-import { useState } from 'react';
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { lazy, Suspense } from "react";
 
-import './App.css';
-import Register from '../pages/auth/Register';
-import LoginForm  from '../pages/LoginForm';
-import ForgetPassword from '../pages/ForgetPassword';
-import ResetPassword from '../pages/auth/ResetPassword';
-import Header from '../components/Header' ;
-import Footer from '../components/util/Footer';
-import CategoryBar from '../components/util/CategoryBar';
-import HeroBanner from '../components/util/HeroBanner';
-import ProductCard from '../components/product/ProductCard';
-import MainPage from '../pages/MainPage';
-import ProductDetailPage from '../pages/ProductDetailPage';
-import ChatBox from '../components/ChatBox';
-import ChatButton from '../components/ChatButton';
-import { useChat } from '../context/ChatContext';
-import SellerDashboard from '../pages/seller/SellerDashboard';
-import SellerMessagePage from '../pages/seller/SellerMessagePage';
-import SellerSidebar from '../components/seller/overview/SellerSidebar';
-import SellerProductPage from '../pages/seller/SellerProductPage';
-import SellerLayout from '../layout/SellerLayout';
-import AddProductPage from '../pages/seller/AddProductPage';
-import CheckoutPage from '../pages/payment/CheckoutPage';
-import PaymentCallbackPage from '../pages/payment/PaymentCallbackPage';
-import PaymentSuccessPage from '../pages/payment/PaymentSuccessPage';
-import PaymentFailPage from '../pages/payment/PaymentFailPage';
-import OrdersPage from '../pages/order/OrdersPage';
-import RevenuePage from '../pages/revenue/RevenuePage';
-import MainLayout from '../layout/MainLayout';
-import SimpleLayout from '../layout/SimpleLayout';
+import "./App.css";
+import { useAuth } from "../context/AuthContext";
+import MainLayout from "../layout/MainLayout";
+import SellerLayout from "../layout/SellerLayout";
+import SimpleLayout from "../layout/SimpleLayout";
+const MainPage = lazy(() => import("../pages/MainPage"));
+const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
+const ProductListingPage = lazy(() => import("../pages/ProductListingPage"));
+const CartPage = lazy(() => import("../pages/cart/CartPage"));
+const LoginForm = lazy(() => import("../pages/auth/LoginForm"));
+const Register = lazy(() => import("../pages/auth/Register"));
+const ForgetPassword = lazy(() => import("../pages/auth/ForgetPassword"));
+const ResetPassword = lazy(() => import("../pages/auth/ResetPassword"));
+const BuyerOrdersPage = lazy(() => import("../pages/order/BuyerOrdersPage"));
+const ProfilePage = lazy(() => import("../pages/account/ProfilePage"));
+const OrdersPage = lazy(() => import("../pages/order/OrdersPage"));
+const CheckoutPage = lazy(() => import("../pages/payment/CheckoutPage"));
+const PaymentCallbackPage = lazy(() => import("../pages/payment/PaymentCallbackPage"));
+const PaymentSuccessPage = lazy(() => import("../pages/payment/PaymentSuccessPage"));
+const PaymentFailPage = lazy(() => import("../pages/payment/PaymentFailPage"));
+const RevenuePage = lazy(() => import("../pages/revenue/RevenuePage"));
+const SellerDashboard = lazy(() => import("../pages/seller/SellerDashboard"));
+const SellerMessagePage = lazy(() => import("../pages/seller/SellerMessagePage"));
+const SellerProductPage = lazy(() => import("../pages/seller/SellerProductPage"));
+const AddProductPage = lazy(() => import("../pages/seller/product/AddProductPage"));
+const ProductDetailPage = lazy(() => import("../pages/seller/product/ProductDetailPage"));
 
-function App() {
+function FullPageLoader() {
     return (
-        <Routes>
+        <div className="grid min-h-screen place-items-center bg-slate-50" role="status">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-200 border-t-orange-500" />
+            <span className="sr-only">Đang tải</span>
+        </div>
+    );
+}
 
-            {/* Main */}
+function ProtectedRoute({ children, sellerOnly = false }) {
+    const { isAuthenticated, isInitializing, shop } = useAuth();
+    const location = useLocation();
+
+    if (isInitializing) return <FullPageLoader />;
+    if (!isAuthenticated) {
+        const returnUrl = `${location.pathname}${location.search}`;
+        return <Navigate to={`/login?returnUrl=${encodeURIComponent(returnUrl)}`} replace />;
+    }
+    if (sellerOnly && !shop) return <Navigate to="/" replace />;
+    return children;
+}
+
+function GuestRoute({ children }) {
+    const { isAuthenticated, isInitializing } = useAuth();
+    if (isInitializing) return <FullPageLoader />;
+    return isAuthenticated ? <Navigate to="/" replace /> : children;
+}
+
+export default function App() {
+    return (
+        <Suspense fallback={<FullPageLoader />}><Routes>
             <Route element={<MainLayout />}>
-                <Route path="/" element={<MainPage />} />
-                <Route path="/products/:productId" element={<ProductDetailPage />} />
+                <Route index element={<MainPage />} />
+                <Route path="products" element={<ProductListingPage />} />
+                <Route path="products/:productId" element={<ProductDetailPage />} />
+                <Route path="cart" element={<CartPage />} />
+                <Route path="orders" element={<ProtectedRoute><BuyerOrdersPage /></ProtectedRoute>} />
+                <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             </Route>
 
-            {/* Auth */}
             <Route element={<SimpleLayout />}>
-                <Route path="/login" element={<LoginForm />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/forget-password" element={<ForgetPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="login" element={<GuestRoute><LoginForm /></GuestRoute>} />
+                <Route path="register" element={<GuestRoute><Register /></GuestRoute>} />
+                <Route path="forget-password" element={<GuestRoute><ForgetPassword /></GuestRoute>} />
+                <Route path="reset-password" element={<GuestRoute><ResetPassword /></GuestRoute>} />
+                <Route path="checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+                <Route path="payment/result" element={<ProtectedRoute><PaymentCallbackPage /></ProtectedRoute>} />
+                <Route path="payment/success" element={<PaymentSuccessPage />} />
+                <Route path="payment/fail" element={<PaymentFailPage />} />
             </Route>
 
-            {/* Checkout */}
-            <Route element={<SimpleLayout />}>
-                <Route path="/checkout" element={<CheckoutPage />} />
-                <Route path="/payment/result" element={<PaymentCallbackPage />} />
-                <Route path="/payment/success" element={<PaymentSuccessPage />} />
-                <Route path="/payment/fail" element={<PaymentFailPage />} />
-            </Route>
-
-            {/* Seller */}
-            <Route path="/seller" element={<SellerLayout />}>
+            <Route path="seller" element={<ProtectedRoute sellerOnly><SellerLayout /></ProtectedRoute>}>
                 <Route index element={<SellerDashboard />} />
                 <Route path="products" element={<SellerProductPage />} />
                 <Route path="products/add" element={<AddProductPage />} />
-                <Route path="order" element={<OrdersPage />} />
+                <Route path="products/:productId/edit" element={<AddProductPage mode="edit" />} />
+                <Route path="orders" element={<OrdersPage />} />
+                <Route path="order" element={<Navigate to="/seller/orders" replace />} />
                 <Route path="revenue" element={<RevenuePage />} />
                 <Route path="messages" element={<SellerMessagePage />} />
             </Route>
 
-        </Routes>
+            <Route path="*" element={<NotFoundPage />} />
+        </Routes></Suspense>
     );
 }
-
-export default App

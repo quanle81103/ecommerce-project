@@ -79,15 +79,20 @@ export const addItem = async(productId, quantity) => {
     return data.message;
 }
 
+export const updateCartItem = async (productId, quantity) => {
+    const { data } = await api.put("/cartitems/update", null, { params: { productId, quantity } });
+    return data.message;
+};
+
+export const removeCartItem = async (productId) => {
+    const { data } = await api.delete("/cartitems/remove", { params: { productId } });
+    return data.message;
+};
+
 export const getShopByProduct = async (productId) => {
-    const token = localStorage.getItem("Token");
     const { data } = await api.get(`/shops/shop/${productId}`, {
         params: {
             productId
-        },
-
-        headers: {
-            Authorization: `Bearer ${token}`
         }
     });
     return data.data;
@@ -257,3 +262,25 @@ export const cancelOrder = async(orderId) => {
 
     return data.data;
 }
+
+export const getMyOrders = async () => {
+    const { data } = await api.get("/orders/me");
+    return data.data;
+};
+
+export const updateUserProfile = async (request) => {
+    const { data } = await api.put("/users/update", request);
+    return data.data;
+};
+
+export const createProduct = async (formData) => {
+    const { data } = await api.post("/products/product/add", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+    });
+    return data.data;
+};
+
+export const updateProduct = async (productId, request) => {
+    const { data } = await api.put(`/products/update/product/${productId}`, request);
+    return data.data;
+};

@@ -1,9 +1,11 @@
 import axios from "axios";
 
+const ghnToken = import.meta.env.VITE_GHN_TOKEN;
+
 const addressApi = axios.create({
-    baseURL: "https://online-gateway.ghn.vn/shiip/public-api/master-data",
+    baseURL: import.meta.env.VITE_GHN_API_URL || "https://online-gateway.ghn.vn/shiip/public-api/master-data",
     headers: {
-        "Token": "3107ba7a-4069-11f1-bf12-e244fda9315f",
+        ...(ghnToken ? { Token: ghnToken } : {}),
         "Content-Type": "application/json"
     },
     timeout: 5000,

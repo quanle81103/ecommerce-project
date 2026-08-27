@@ -1,31 +1,50 @@
-import { createContext, useContext, useState } from "react";
-import { getCart, addItem } from "../services/dataService";
+import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { addItem, getCart, removeCartItem, updateCartItem } from "../services/dataService";
+import { useAuth } from "./AuthContext";
 
-// return a context object 
-const CartContext = createContext();
+const CartContext = createContext(null);
 
-// store all cart state
 export function CartProvider({ children }) {
+    const { isAuthenticated } = useAuth();
     const [cart, setCart] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const loadCart = async () => {
-        const res = await getCart();
-        setCart(res);
-    };
+    const loadCart = useCallback(async () => {
+        if (!isAuthenticated) {
+            setCart(null);
+            return null;
+        }
+        setIsLoading(true);
+        try {
+            const response = await getCart();
+            setCart(response);
+            return response;
+        } finally {
+            setIsLoading(false);
+        }
+    }, [isAuthenticated]);
 
-    const addToCart = async (productId, quantity) => {
+    const addToCart = useCallback(async (productId, quantity) => {
         await addItem(productId, quantity);
-        await loadCart();
-    };
+        return loadCart();
+    }, [loadCart]);
+    const updateQuantity = useCallback(async (productId, quantity) => {
+        await updateCartItem(productId, quantity);
+        return loadCart();
+    }, [loadCart]);
+    const removeItem = useCallback(async (productId) => {
+        await removeCartItem(productId);
+        return loadCart();
+    }, [loadCart]);
 
-    return (
-        <CartContext.Provider value={{ cart, loadCart, addToCart }}>
-            {children}
-        </CartContext.Provider>
-    )
+    const value = useMemo(() => ({
+        cart, isLoading, loadCart, addToCart, updateQuantity, removeItem
+    }), [cart, isLoading, loadCart, addToCart, updateQuantity, removeItem]);
+    return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
-// Components can read context by passing it to useContext();
 export function useCart() {
-    return useContext(CartContext);
+    const context = useContext(CartContext);
+    if (!context) throw new Error("useCart must be used inside CartProvider");
+    return context;
 }

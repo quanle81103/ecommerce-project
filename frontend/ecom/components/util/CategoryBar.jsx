@@ -1,32 +1,27 @@
-import { responseCategory } from "../../services/dataService";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { responseCategory } from "../../services/dataService";
 
 export default function CategoryBar() {
-    
+    const navigate = useNavigate();
     const [categories, setCategories] = useState([]);
 
     useEffect(() => {
-        async function loadCategories() {
-            try {
-                const res = await responseCategory();
-                setCategories(res);
-            } catch (error) {
-                console.log(error.message);
-            }
-        }
-
-        loadCategories();
+        responseCategory().then(setCategories).catch(() => setCategories([]));
     }, []);
 
-    return(
-        <div className="flex gap-10 px-10 py-3 bg-gray-100 justify-center items-center text-lg font-mono">
-            {
-                categories.map((category) => (
-                    <div key={category.id} className="cursor-pointer hover:text-orange-500" >
+    if (!categories.length) return null;
+
+    return (
+        <nav aria-label="Danh mục sản phẩm" className="border-b bg-white">
+            <div className="app-container flex gap-2 overflow-x-auto py-2 [scrollbar-width:none]">
+                <button type="button" onClick={() => navigate("/products")} className="min-h-10 shrink-0 rounded-full bg-orange-500 px-4 text-sm font-semibold text-white">Tất cả</button>
+                {categories.map((category) => (
+                    <button key={category.id} type="button" onClick={() => navigate(`/products?category=${category.id}&categoryName=${encodeURIComponent(category.name)}`)} className="min-h-10 shrink-0 rounded-full bg-slate-100 px-4 text-sm font-medium text-slate-700 hover:bg-orange-50 hover:text-orange-600">
                         {category.name}
-                    </div>
-                ))
-            }
-        </div>
+                    </button>
+                ))}
+            </div>
+        </nav>
     );
 }

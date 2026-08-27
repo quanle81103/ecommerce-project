@@ -24,3 +24,8 @@ export const responseForgetPassword = async (email) => {
     });
     return data.message;
 }
+
+export const registerUser = async (request) => {
+    const { data } = await api.post("/users/create", request);
+    return data.data;
+};

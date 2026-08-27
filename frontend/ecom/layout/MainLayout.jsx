@@ -1,36 +1,23 @@
 import { Outlet } from "react-router-dom";
-import Header from "../components/Header";
-import Footer from "../components/util/Footer";
-import CategoryBar from "../components/util/CategoryBar";
-import ChatButton from "../components/ChatButton";
-import ChatBox from "../components/ChatBox";
 import { Toaster } from "sonner";
+import ChatBox from "../components/seller/message/ChatBox";
+import ChatButton from "../components/seller/message/ChatButton";
+import CategoryBar from "../components/util/CategoryBar";
+import Footer from "../components/util/Footer";
+import Header from "../components/util/Header";
 import { useChat } from "../context/ChatContext";
 
 export default function MainLayout() {
-    const { isOpen, shop, closeChat } = useChat();
-
+    const { isOpen, closeChat } = useChat();
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
             <Header />
             <CategoryBar />
-
-            <main className="flex-1">
-                <Outlet />
-            </main>
-
+            <main className="flex-1"><Outlet /></main>
             <ChatButton />
-
-            {isOpen && (
-                <ChatBox
-                    shop={shop}
-                    onClose={closeChat}
-                />
-            )}
-
+            {isOpen && <ChatBox onClose={closeChat} />}
             <Footer />
-
-            <Toaster position="top-right" />
+            <Toaster richColors position="top-right" />
         </div>
     );
 }

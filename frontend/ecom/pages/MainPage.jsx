@@ -1,50 +1,53 @@
-import { useState, useEffect } from "react";
-
-import HeroBanner from "../components/util/HeroBanner";
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import ProductCard from "../components/product/ProductCard";
+import { ErrorState, LoadingState } from "../components/ui/Feedback";
+import HeroBanner from "../components/util/HeroBanner";
 import { getProducts, responseBanner } from "../services/dataService";
 
 export default function MainPage() {
-
     const [products, setProducts] = useState([]);
     const [banners, setBanners] = useState([]);
-    
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-    // load products
-    useEffect(() => {
-        async function loadProducts() {
-            const res = await getProducts(0);
-            setProducts(res.content);
-        }
-
-        loadProducts();
+    const loadPage = useCallback(async () => {
+        setLoading(true);
+        setError("");
+        const [productResult, bannerResult] = await Promise.allSettled([getProducts(0), responseBanner()]);
+        if (productResult.status === "fulfilled") setProducts(productResult.value?.content || []);
+        else setError("Không thể tải danh sách sản phẩm. Vui lòng thử lại.");
+        if (bannerResult.status === "fulfilled") setBanners(bannerResult.value || []);
+        setLoading(false);
     }, []);
 
-    // load banners
-    useEffect(() => {
-        async function loadBanner() {
-            try {
-                const res = await responseBanner();
-                setBanners(res);
-            } catch (error) {
-                console.log(error);
-            }
-        }
-
-        loadBanner();
-    }, []);
+    useEffect(() => { loadPage(); }, [loadPage]);
 
     return (
         <>
-            <HeroBanner banners={banners} />
+            <HeroBanner banners={banners} loading={loading && !banners.length} />
+            <section className="app-container py-10 sm:py-14">
+                <div className="mb-6 flex items-end justify-between gap-4">
+                    <div>
+                        <p className="text-sm font-bold uppercase tracking-wider text-orange-600">Khám phá hôm nay</p>
+                        <h1 className="mt-1 text-2xl font-bold sm:text-3xl">Sản phẩm nổi bật</h1>
+                    </div>
+                    <Link to="/products" className="secondary-button shrink-0">Xem tất cả</Link>
+                </div>
+                {loading ? <LoadingState label="Đang tải sản phẩm..." /> : error ? <ErrorState message={error} onRetry={loadPage} /> : (
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5">
+                        {products.map((product) => <ProductCard key={product.id} product={product} />)}
+                    </div>
+                )}
+            </section>
 
-            <div className="grid grid-cols-5 gap-2 mx-60 mt-20 mb-20">
-                {
-                    products.map(product => (
-                        <ProductCard key={product.id} product={product} />
-                    ))
-                }
-            </div>
+            <section className="app-container pb-8">
+                <div className="grid gap-4 rounded-2xl bg-white p-5 shadow-sm sm:grid-cols-3 sm:p-7">
+                    {[['Giao hàng tiện lợi', 'Theo dõi trạng thái đơn hàng rõ ràng.'], ['Thanh toán an toàn', 'Thanh toán trực tuyến qua VNPay.'], ['Hỗ trợ khách hàng', 'Đồng hành trong suốt quá trình mua sắm.']].map(([title, description]) => (
+                        <div key={title} className="rounded-xl border border-slate-100 p-4"><h2 className="font-bold">{title}</h2><p className="mt-1 text-sm text-slate-500">{description}</p></div>
+                    ))}
+                </div>
+            </section>
         </>
     );
 }

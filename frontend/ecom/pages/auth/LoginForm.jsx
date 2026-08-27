@@ -1,120 +1,58 @@
-import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { loginSchema } from "../utils/authSchema";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-
-// Image
-import facebookLogo from "../src/assets/facebook.png";
-import googleLogo from "../src/assets/google.png";
-
-import { response } from "../services/authService";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
+import { response } from "../../services/authService";
+import { loginSchema } from "../../utils/authSchema";
 
 export default function LoginForm() {
     const navigate = useNavigate();
-    const [showPassword, setShowPassword] = useState(false);
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [params] = useSearchParams();
     const { initializeAuth } = useAuth();
-    // hàm gọi axios trả về Promise
-    async function handleLogin() {
-        const result = loginSchema.safeParse({
-            email, password
-        })
+    const [showPassword, setShowPassword] = useState(false);
+    const [form, setForm] = useState({ email: "", password: "" });
+    const [errors, setErrors] = useState({});
+    const [submitting, setSubmitting] = useState(false);
 
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        const result = loginSchema.safeParse(form);
         if (!result.success) {
-            toast.error(result.error.issues[0].message);
+            setErrors(Object.fromEntries(result.error.issues.map((issue) => [issue.path[0], issue.message])));
             return;
         }
-
-        try {   
-            // token: Promise
-            const token = await response(email, password);
+        setErrors({});
+        setSubmitting(true);
+        try {
+            const token = await response(form.email, form.password);
             localStorage.setItem("Token", token);
             await initializeAuth();
-            navigate("/");
-
+            const returnUrl = params.get("returnUrl");
+            navigate(returnUrl?.startsWith("/") ? returnUrl : "/", { replace: true });
+            toast.success("Đăng nhập thành công.");
         } catch (error) {
-            console.log(error.response);
-            console.log(error.message);
-            toast.error("Email hoặc mật khẩu không đúng");
+            toast.error(error.response?.data?.message || "Email hoặc mật khẩu không đúng.");
+        } finally {
+            setSubmitting(false);
         }
-    }
+    };
 
     return (
-        <div className="flex justify-center h-full items-center">
-            <div className="bg-cyan-200 w-screen p-6 border flex flex-col rounded-lg shadow-lg gap-8">
-                {/* <img src="" alt="logo" className="border-2 rounded-lg"/> */}
-                
-                <h1 className="text-center font-serif">
-                    Login Form
-                </h1>
-
-                <input 
-                    type="text" 
-                    placeholder="Nhập email của bạn" 
-                    className="pt-3 p-2 text-lg rounded bg-white border-2"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                />
-
-                <div>
-                    <div className="relative">
-                        <input 
-                            type={showPassword ? "text" : "password"} 
-                            name="password" 
-                            id="passwordId" 
-                            placeholder="Nhập mật khẩu" 
-                            className="pt-3 w-full text-lg p-2 rounded bg-white border-2 pr-8" 
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
-                        
-                        <button  
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2"
-                        >
-                            {showPassword ? <FaEye/> : <FaEyeSlash/>}
-                        </button>
-
-                    </div>
-                    <div className="flex justify-end gap-2">
-                        
-                        <Link to="/register">
-                            Đăng ký
-                        </Link>
-
-                        <Link to="/forget-password">
-                            Quên mật khẩu!
-                        </Link>
-                    </div>
-                </div>
-
-                <button 
-                    className="p-2 pt-3 border bg-cyan-600 text-blue-50" 
-                    onClick={handleLogin}
-                >
-                    Login
-                </button>
-                
-                <div className="flex justify-center">
-                    <p>Hoăc đăng nhập bằng:   </p>
-                    <div className="w-20 h-20 flex flex-row gap-2">
-
-                        {/*TODO: bổ sung đăng nhập bằng facebook và google*/}
-                        <a href="">
-                            <img src={facebookLogo} alt="FaceBook" />
-                        </a>
-
-                        <a href="">
-                            <img src={googleLogo} alt="Google"/>
-                        </a>
-                    </div>
-                </div>
-            </div>
+        <div className="app-container grid min-h-[70vh] place-items-center py-10">
+            <form onSubmit={handleSubmit} className="surface-card w-full max-w-md p-6 sm:p-8" noValidate>
+                <p className="text-sm font-bold uppercase tracking-wider text-orange-600">Chào mừng trở lại</p>
+                <h1 className="mt-1 text-3xl font-bold">Đăng nhập</h1>
+                <p className="mt-2 text-sm text-slate-500">Đăng nhập để mua sắm và quản lý đơn hàng.</p>
+                <label className="mt-7 block text-sm font-semibold" htmlFor="login-email">Email</label>
+                <input id="login-email" type="email" autoComplete="email" className="field-control mt-2" value={form.email} onChange={(event) => setForm((value) => ({ ...value, email: event.target.value }))} aria-invalid={Boolean(errors.email)} />
+                {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+                <div className="mt-5 flex items-center justify-between"><label className="text-sm font-semibold" htmlFor="login-password">Mật khẩu</label><Link to="/forget-password" className="text-sm font-semibold text-orange-600 hover:underline">Quên mật khẩu?</Link></div>
+                <div className="relative mt-2"><input id="login-password" type={showPassword ? "text" : "password"} autoComplete="current-password" className="field-control pr-12" value={form.password} onChange={(event) => setForm((value) => ({ ...value, password: event.target.value }))} aria-invalid={Boolean(errors.password)} /><button type="button" aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setShowPassword((value) => !value)} className="absolute right-1 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-lg text-slate-500">{showPassword ? <FaEyeSlash /> : <FaEye />}</button></div>
+                {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+                <button type="submit" disabled={submitting} className="primary-button mt-6 w-full">{submitting ? "Đang đăng nhập..." : "Đăng nhập"}</button>
+                <p className="mt-6 text-center text-sm text-slate-600">Chưa có tài khoản? <Link to="/register" className="font-bold text-orange-600 hover:underline">Đăng ký ngay</Link></p>
+            </form>
         </div>
-    )
+    );
 }
-
