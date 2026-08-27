@@ -1,6 +1,7 @@
 package com.ecommerce.ecommerce.serviceImpl;
 
 import com.ecommerce.ecommerce.config.ghn.GhnConfig;
+import com.ecommerce.ecommerce.config.ghn.GhnClientFactory;
 import com.ecommerce.ecommerce.dao.ShippingOrder;
 import com.ecommerce.ecommerce.dao.Shop;
 import com.ecommerce.ecommerce.dto.GhnDto;
@@ -13,51 +14,40 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import com.ecommerce.ecommerce.service.GhnService;
 import com.ecommerce.ecommerce.util.status.ShippingStatus;
-import io.netty.resolver.DefaultAddressResolverGroup;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
-import reactor.netty.http.client.HttpClient;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class GhnServiceImpl implements GhnService {
     private final GhnConfig ghnConfig;
-    private final WebClient.Builder webClientBuilder;
+    private final GhnClientFactory ghnClientFactory;
     private final ShippingOrderRepository shippingOrderRepository;
     private final ShopRepository shopRepository;
-    // Create webClient per shop
+    private final GhnDataCacheService ghnDataCacheService;
 
-    private WebClient buildClient(String shopId, String token) {
-        HttpClient httpClient = HttpClient.create()
-                .resolver(DefaultAddressResolverGroup.INSTANCE);
-        return WebClient.builder()
-                .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .baseUrl(ghnConfig.getBaseUrl())
-                .defaultHeader("ShopId", shopId)
-                .defaultHeader("Token", token)
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .codecs(configurer -> configurer
-                        .defaultCodecs()
-                        .maxInMemorySize(10 * 1024 * 1024))
-                .build();
+    private GhnDto.GhnAddressResponse.GhnShopInfo findShopInfo(String token, String ghnShopId) {
+        return ghnDataCacheService.getShopList(token, ghnShopId).stream()
+                .filter(shop -> shop.getShopId().equals(Integer.valueOf(ghnShopId)))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFound("Ghn shop not found"));
+    }
+
+    @Override
+    public GhnDto.GhnAddressResponse.GhnShopInfo getInfo(String token, String ghnShopId) {
+        return findShopInfo(token, ghnShopId);
     }
 
     @Override
     public GhnDto.GhnOrderResponse createOrder(String token, String ghnShopId, GhnDto.GhnCreateOrderRequest request) {
-        WebClient webClient = buildClient(ghnShopId, token);
+        WebClient webClient = ghnClientFactory.create(ghnShopId, token);
 
         try {
             GhnDto.GhnOrderResponse response = webClient.post().uri("/shiip/public-api/v2/shipping-order/create")
@@ -87,7 +77,7 @@ public class GhnServiceImpl implements GhnService {
 
     // get Service_id
     public GhnDto.GhnAvailableServiceResponse getAvailableService(String token, String shopId, GhnDto.GhnAvailableServiceRequest request) {
-        WebClient webClient = buildClient(shopId, token);
+        WebClient webClient = ghnClientFactory.create(shopId, token);
 
         try {
             GhnDto.GhnAvailableServiceResponse response = webClient.post().uri("/shiip/public-api/v2/shipping-order/available-services")
@@ -129,7 +119,7 @@ public class GhnServiceImpl implements GhnService {
     @Override
     public GhnDto.GhnShippingOrderFeeResponse getShippingFee(String shopId, String token, GhnDto.GhnShippingOrderFeeRequest request) {
 
-        WebClient webClient = buildClient(shopId, token);
+        WebClient webClient = ghnClientFactory.create(shopId, token);
 
         try {
 
@@ -174,7 +164,7 @@ public class GhnServiceImpl implements GhnService {
 
     @Override
     public GhnDto.GhnLeadTimeResponse getLeadTime(String shopId, String token, GhnDto.GhnLeadTime request) {
-        WebClient webClient = buildClient(shopId, token);
+        WebClient webClient = ghnClientFactory.create(shopId, token);
         try {
 
             GhnDto.GhnLeadTimeResponse response =
@@ -217,7 +207,7 @@ public class GhnServiceImpl implements GhnService {
     public boolean verifyGhnCredentials(String ghnToken, String shopId) {
         log.info("GHN verify — baseUrl=[{}], shopId=[{}], tokenLen={}",
                 ghnConfig.getBaseUrl(), shopId, ghnToken == null ? 0 : ghnToken.length());
-        WebClient webClient = buildClient(shopId, ghnToken);
+        WebClient webClient = ghnClientFactory.create(shopId, ghnToken);
 
         try {
             GhnDto.GhnShopResponse response = webClient.post().uri("/shiip/public-api/v2/shop/all")
@@ -250,103 +240,33 @@ public class GhnServiceImpl implements GhnService {
         }
     }
 
-    @Cacheable(value = "ghn_shop_info", key = "#ghnShopId")
-    public List<GhnDto.GhnAddressResponse.GhnShopInfo> getShopList(String ghnToken, String ghnShopId) {
-        WebClient webClient = buildClient(ghnShopId, ghnToken);
-
-        GhnDto.GhnAddressResponse response = webClient.get().uri("/shiip/public-api/v2/shop/all")
-                .retrieve().bodyToMono(GhnDto.GhnAddressResponse.class)
-                .block();
-
-        if (response == null || response.getCode() != 200) {
-            throw new ExternalServiceException("Unable to receive response from GHN");
-        }
-
-        return response.getData().getShops();
-    }
-
-    @Override
-    public GhnDto.GhnAddressResponse.GhnShopInfo getInfo(String ghnToken, String ghnShopId) {
-        return getShopList(ghnToken, ghnShopId).stream().filter(a -> a.getShopId().equals(Integer.valueOf(ghnShopId))).findFirst().orElseThrow(() -> new ResourceNotFound("Not found"));
-    }
-
-    @Cacheable(value = "ghn_districts", key = "'all'")
-    private List<GhnDto.GhnDistrictResponse.DistrictDto> getDistrict(String token, String ghnShopId) {
-        WebClient webClient = buildClient(ghnShopId, token);
-
-        GhnDto.GhnDistrictResponse response = webClient.get().uri("/shiip/public-api/master-data/district")
-                .retrieve().bodyToMono(GhnDto.GhnDistrictResponse.class)
-                .block();
-
-        if (response == null || response.getCode() != 200) {
-            throw new ExternalServiceException("Unable to receive response from GHN");
-        }
-
-        return response.getData();
-    }
-
     @Override
     public String getDistrictName(String token, String ghnShopId) {
         Integer districtId = getInfo(token, ghnShopId).getDistrictId();
-        return getDistrict(token, ghnShopId).stream().filter(d -> d.getDistrictId().equals(districtId))
+        return ghnDataCacheService.getDistricts(token, ghnShopId).stream().filter(d -> d.getDistrictId().equals(districtId))
                 .map(GhnDto.GhnDistrictResponse.DistrictDto::getDistrictName)
                 .findFirst().orElseThrow(() -> new ResourceNotFound("GHN master-data lookup failed"));
     }
 
-    @Cacheable(value = "ghn_wards", key = "#districtId")
-    private List<GhnDto.GhnWardResponse.WardDto> getWard(String token, String ghnShopId) {
-        WebClient webClient = buildClient(ghnShopId, token);
-
-        var info = getInfo(token, ghnShopId);
-//        Integer wardCode = info.getWardCode();
-        Integer districtId = info.getDistrictId();
-
-        GhnDto.GhnWardResponse response = webClient.get()
-                .uri(uriBuilder -> uriBuilder.path("/shiip/public-api/master-data/ward")
-                        .queryParam("district_id", districtId).build())
-                .retrieve().bodyToMono(GhnDto.GhnWardResponse.class)
-                .block();
-
-        if (response == null || response.getCode() != 200) {
-            throw new ExternalServiceException("Unable to receive response from GHN");
-        }
-
-        return response.getData();
-    }
     @Override
     public String getWardName(String token, String ghnShopId) {
-        String wardCode = getInfo(token, ghnShopId).getWardCode();
-        return getWard(token, ghnShopId).stream().filter(d -> d.getWardCode().equals(wardCode))
+        GhnDto.GhnAddressResponse.GhnShopInfo shopInfo = findShopInfo(token, ghnShopId);
+
+        return ghnDataCacheService.getWards(token, ghnShopId, shopInfo.getDistrictId()).stream().filter(d -> d.getWardCode().equals(shopInfo.getWardCode()))
                 .map(GhnDto.GhnWardResponse.WardDto::getWardName)
                 .findFirst().orElseThrow(() -> new ResourceNotFound("GHN master-data lookup failed"));
     }
 
-    @Cacheable(value = "ghn_provinces", key = "'all'")
-    private List<GhnDto.GhnProvinceResponse.ProvinceDto> getProvince(String token, String ghnShopId) {
-        WebClient webClient = buildClient(ghnShopId, token);
-
-
-        GhnDto.GhnProvinceResponse response = webClient.get()
-                .uri("/shiip/public-api/master-data/province")
-                .retrieve().bodyToMono(GhnDto.GhnProvinceResponse.class)
-                .block();
-
-        if (response == null || response.getCode() != 200) {
-            throw new ExternalServiceException("Unable to receive response from GHN");
-        }
-
-        return response.getData();
-    }
     @Override
     public String getProvinceName(String token, String ghnShopId) {
-        Integer districtId = getInfo(token, ghnShopId).getDistrictId();
-        Integer provinceId = getDistrict(token, ghnShopId).stream()
+        Integer districtId = findShopInfo(token, ghnShopId).getDistrictId();
+        Integer provinceId = ghnDataCacheService.getDistricts(token, ghnShopId).stream()
                 .filter(d -> d.getDistrictId().equals(districtId))
                 .map(GhnDto.GhnDistrictResponse.DistrictDto::getProvinceId)
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFound("Province id not found"));
 
-        return getProvince(token, ghnShopId).stream()
+        return ghnDataCacheService.getProvinces(token, ghnShopId).stream()
                 .filter(p -> p.getProvinceId().equals(provinceId))
                 .map(GhnDto.GhnProvinceResponse.ProvinceDto::getProvinceName)
                 .findFirst()
@@ -369,7 +289,7 @@ public class GhnServiceImpl implements GhnService {
     @Transactional
     @Override
     public GhnDto.GhnCancelOrderResponse cancelOrder(String ghnToken, String ghnShopId, GhnDto.GhnCancelOrderRequest request) {
-        WebClient webClient = buildClient(ghnShopId, ghnToken);
+        WebClient webClient = ghnClientFactory.create(ghnShopId, ghnToken);
 
         // in order to use bodyValue have to user post method
         GhnDto.GhnCancelOrderResponse response = webClient.post()
