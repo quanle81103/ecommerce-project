@@ -4,7 +4,7 @@ import { FaTimesCircle } from "react-icons/fa";
 export default function PaymentFailPage() {
     return (
         <div className="min-h-[80vh] flex items-center justify-center bg-gray-50">
-            <div className="bg-white rounded-2xl shadow-lg p-10 text-center max-w-lg w-full">
+            <div className="mx-4 w-full max-w-lg rounded-2xl bg-white p-6 text-center shadow-lg sm:p-10">
 
                 <FaTimesCircle className="text-red-500 text-7xl mx-auto mb-5" />
 
@@ -17,7 +17,7 @@ export default function PaymentFailPage() {
                     Bạn có thể thử thanh toán lại.
                 </p>
 
-                <div className="flex justify-center gap-4">
+                <div className="flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
 
                     <Link
                         to="/checkout"

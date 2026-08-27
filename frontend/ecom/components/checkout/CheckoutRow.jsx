@@ -1,28 +1,5 @@
-export default function CheckoutRow({ item }) {
+import { formatCurrency } from "../../utils/formatters";
 
-    return (
-        <div className="grid grid-cols-12 gap-4 px-6 py-5 border-b items-center hover:bg-gray-50">
-            <div className="col-span-6 flex items-center gap-4">
-                <img
-                    src={item.productUrl}
-                    alt=""
-                    className="w-20 h-20 rounded-lg border object-cover"
-                />
-                <div>
-                    <p className="font-medium">
-                        {item.productName}
-                    </p>
-                </div>
-            </div>
-            <div className="col-span-2 text-center">
-                {item.unitPrice.toLocaleString()} ₫
-            </div>
-            <div className="col-span-2 text-center">
-                x {item.quantity}
-            </div>
-            <div className="col-span-2 text-right font-semibold text-orange-500">
-                {(item.unitPrice * item.quantity).toLocaleString()} ₫
-            </div>
-        </div>
-    );
+export default function CheckoutRow({ item }) {
+    return <div className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-3 p-4 md:grid-cols-12 md:items-center md:gap-4 md:px-6 md:py-5"><div className="md:col-span-6 flex items-center gap-4"><img src={item.productUrl} alt={item.productName} className="h-18 w-18 shrink-0 rounded-xl border object-cover md:h-20 md:w-20" /><p className="line-clamp-2 font-medium">{item.productName}</p></div><div className="col-start-2 grid grid-cols-2 gap-2 text-sm md:col-span-2 md:block md:text-center md:text-base"><span className="text-slate-500 md:hidden">Đơn giá</span><span className="text-right md:text-center">{formatCurrency(item.unitPrice)}</span></div><div className="col-start-2 grid grid-cols-2 gap-2 text-sm md:col-span-2 md:block md:text-center md:text-base"><span className="text-slate-500 md:hidden">Số lượng</span><span className="text-right md:text-center">× {item.quantity}</span></div><div className="col-start-2 grid grid-cols-2 gap-2 text-sm font-bold text-orange-600 md:col-span-2 md:block md:text-right md:text-base"><span className="text-slate-500 md:hidden">Thành tiền</span><span className="text-right">{formatCurrency(Number(item.unitPrice) * item.quantity)}</span></div></div>;
 }

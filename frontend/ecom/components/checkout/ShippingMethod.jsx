@@ -1,28 +1,6 @@
-export default function ShippingMethod({ shippingFees }) {
+import { FiRefreshCw, FiTruck } from "react-icons/fi";
+import { formatCurrency } from "../../utils/formatters";
 
-    console.log(shippingFees);
-    return (
-
-        <div className="bg-white rounded-xl shadow p-6">
-
-            <h2 className="text-xl font-semibold mb-5">
-
-                🚚 Phương thức vận chuyển
-
-            </h2>
-            {
-                shippingFees.map(shippingFee => (
-                    <div key={shippingFee.shopId} className="flex justify-between items-center border rounded-xl p-5 mb-4">
-                        <p>Shop {shippingFee.shopId}</p>
-                        <p>{shippingFee.serviceName}</p>
-                        <p>Dự kiến giao: {shippingFee.expectedDelivery}</p>
-                    </div>
-                ))
-
-            }
-
-        </div>
-
-    );
-
+export default function ShippingMethod({ shippingFees, loading, error, onRetry }) {
+    return <section className="surface-card p-5 sm:p-6"><div className="flex items-center justify-between gap-3"><h2 className="flex items-center gap-2 text-xl font-bold"><FiTruck className="text-orange-500" /> Phương thức vận chuyển</h2>{error && <button type="button" className="secondary-button" onClick={onRetry}><FiRefreshCw /> Thử lại</button>}</div>{loading ? <div className="mt-5 h-20 animate-pulse rounded-xl bg-slate-100" /> : error ? <p className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p> : !shippingFees.length ? <p className="mt-4 text-sm text-slate-500">Chọn đầy đủ địa chỉ để tính phí vận chuyển.</p> : <div className="mt-5 space-y-3">{shippingFees.map((fee) => <div key={fee.shopId} className="flex items-center justify-between gap-4 rounded-xl border p-4"><div><p className="font-semibold">Shop #{fee.shopId}</p><p className="mt-1 text-sm text-slate-500">Giao hàng tiêu chuẩn</p></div><strong className="text-orange-600">{formatCurrency(fee.shippingFee)}</strong></div>)}</div>}</section>;
 }
