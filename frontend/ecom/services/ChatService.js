@@ -4,8 +4,10 @@ let client = null;
 
 export function connect({ onConnected, onDisconnected, onError } = {}) {
     if (client?.active) return client;
-    const apiUrl = import.meta.env.VITE_API_BASE_URL || "http://13.212.248.63:8080/api/v1";
-    const socketUrl = import.meta.env.VITE_WS_URL || apiUrl.replace(/\/api\/v1\/?$/, "/ws").replace(/^http/, "ws");
+    const apiUrl = import.meta.env.VITE_API_BASE_URL;
+    const defaultSocketUrl = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/ws`;
+    const socketUrl = import.meta.env.VITE_WS_URL
+        || (apiUrl ? apiUrl.replace(/\/api\/v1\/?$/, "/ws").replace(/^http/, "ws") : defaultSocketUrl);
     client = new Client({
         brokerURL: socketUrl,
         reconnectDelay: 5000,
