@@ -1,6 +1,6 @@
 export default function ConversationItem ({ conversation, onClick }) {
     return (
-        <div onClick={onClick} className="flex gap-3 border-b hover:bg-gray-50">
+        <button type="button" onClick={onClick} className="flex w-full gap-3 border-b p-4 text-left hover:bg-gray-50">
             <img src={conversation.logoUrl} alt="" className="w-12 h-12 rounded-full object-cover"/>
 
             <div className="flex-1 overflow-hidden">
@@ -16,6 +16,6 @@ export default function ConversationItem ({ conversation, onClick }) {
                     {conversation.lastMessage}
                 </p>
             </div>
-        </div>
+        </button>
     );
 }

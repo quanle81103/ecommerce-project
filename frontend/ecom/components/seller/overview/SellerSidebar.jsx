@@ -21,7 +21,7 @@ const menus = [
     {
         name: "Đơn hàng",
         icon: <FaShoppingBag />,
-        path: "/seller/order"
+        path: "/seller/orders"
     },
     {
         name: "Doanh thu",
@@ -37,9 +37,9 @@ const menus = [
 
 export default function SellerSidebar() {
     return (
-        <div className="w-64 min-h-screen bg-white shadow p-6">
+        <aside className="h-full min-h-screen w-64 bg-white p-6 shadow">
 
-            <h1 className="mb-10 text-2xl font-bold text-emerald-600">
+            <h1 className="mb-10 text-2xl font-bold text-orange-600">
                 Quản lý Shop
             </h1>
 
@@ -53,8 +53,8 @@ export default function SellerSidebar() {
                             `flex items-center gap-3 rounded-xl px-4 py-3 font-medium transition-all
                             ${
                                 isActive
-                                    ? "bg-emerald-500 text-white shadow"
-                                    : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-600"
+                                    ? "bg-orange-500 text-white shadow"
+                                    : "text-slate-700 hover:bg-orange-50 hover:text-orange-600"
                             }`
                         }
                     >
@@ -68,6 +68,6 @@ export default function SellerSidebar() {
                     </NavLink>
                 ))}
             </div>
-        </div>
+        </aside>
     );
 }

@@ -8,7 +8,7 @@ export default function ConversationList({
 }) {
 
     return (
-        <div className="w-80 border-r flex flex-col">
+        <div className="flex h-full w-full flex-col border-r md:w-80">
 
             <div className="p-4 border-b">
 

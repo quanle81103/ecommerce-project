@@ -2,13 +2,10 @@ import { useState } from "react";
 import { IoMdSend } from "react-icons/io";
 import { useChat } from "../../../context/ChatContext";
 
-export default function MessageInput({
-    conversationId,
-    sendMessage
-}) {
+export default function MessageInput() {
     
     const [message,setMessage]=useState("");
-    const { handleSend } = useChat();
+    const { handleSend, currentConversation, connectionState } = useChat();
     return (
 
         <div className="border-t p-4 flex">
@@ -28,10 +25,12 @@ export default function MessageInput({
                     }
                 }
                 placeholder="Nhập tin nhắn..."
-                className="flex-1 border rounded-lg px-4"
+                disabled={!currentConversation || connectionState !== "connected"}
+                className="field-control min-w-0 flex-1"
             />
 
             <button 
+                type="button"
                 onClick={async () => {
                     const success = await handleSend(message);
 
@@ -39,7 +38,9 @@ export default function MessageInput({
                         setMessage("");
                     }
                 }}
-                className="ml-3 bg-orange-500 text-white px-5 rounded-lg">
+                disabled={!message.trim() || connectionState !== "connected"}
+                aria-label="Gửi tin nhắn"
+                className="primary-button px-4 sm:px-5">
                 <IoMdSend/>
             </button>
 

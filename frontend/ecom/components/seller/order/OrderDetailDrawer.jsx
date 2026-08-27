@@ -26,8 +26,8 @@ export default function OrderDetailDrawer({ order, onClose }) {
                 setLoading(true);
                 const response = await getSellerOrderDetail(order.id);
                 setDetail(response);
-            } catch (error) {
-                console.error(error);
+            } catch {
+                toast.error("Không thể tải chi tiết đơn hàng.");
             } finally {
                 setLoading(false);
             }
@@ -36,6 +36,13 @@ export default function OrderDetailDrawer({ order, onClose }) {
         loadDetail();
 
     }, [order]);
+
+    useEffect(() => {
+        if (!order) return undefined;
+        const closeOnEscape = (event) => event.key === "Escape" && onClose();
+        document.addEventListener("keydown", closeOnEscape);
+        return () => document.removeEventListener("keydown", closeOnEscape);
+    }, [order, onClose]);
 
     const handleHandover = async() => {
         const id1 = toast.loading("Đang bàn giao GHN...");
@@ -46,8 +53,7 @@ export default function OrderDetailDrawer({ order, onClose }) {
                 ...prev, status: "SHIPPING"
             }));
             toast.success("Bàn giao GHN thành công",{id1});
-        } catch (error) {
-            console.error(error);
+        } catch {
             toast.error("Bàn giao GHN thất bại", {id1});
         } finally {
             setLoading(false);
@@ -63,8 +69,7 @@ export default function OrderDetailDrawer({ order, onClose }) {
                 ...prev, status: "DELIVERED"
             }));
             toast.success("Đã xác nhận giao hàng thành công", {id2});
-        } catch (error) {
-            console.error(error);
+        } catch {
             toast.error("Cập nhật trạng thái thất bại", {id2});
         } finally {
             setLoading(false);
@@ -84,8 +89,7 @@ export default function OrderDetailDrawer({ order, onClose }) {
             }));
 
             toast.success("Đã hủy đơn hàng", {id3});
-        } catch (error) {
-            console.error(error);
+        } catch {
             toast.error("Hủy đơn thất bại", {id3});
         } finally {
             setLoading(false);
@@ -97,11 +101,13 @@ export default function OrderDetailDrawer({ order, onClose }) {
     if (loading) {
         return (
             <>
-                <div
+                <button
+                    type="button"
+                    aria-label="Đóng chi tiết đơn hàng"
                     onClick={onClose}
                     className="fixed inset-0 bg-black/40"
                 />
-                <div className="fixed right-0 top-0 h-screen w-125 bg-white flex items-center justify-center">
+                <div className="fixed right-0 top-0 flex h-screen w-full max-w-xl items-center justify-center bg-white">
                     Đang tải...
                 </div>
             </>
@@ -113,7 +119,9 @@ export default function OrderDetailDrawer({ order, onClose }) {
     return (
         <>
             {/* Overlay */}
-            <div
+            <button
+                type="button"
+                aria-label="Đóng chi tiết đơn hàng"
                 onClick={onClose}
                 className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
             />
@@ -133,6 +141,8 @@ export default function OrderDetailDrawer({ order, onClose }) {
                     </div>
 
                     <button
+                        type="button"
+                        aria-label="Đóng chi tiết đơn hàng"
                         onClick={onClose}
                         className="rounded-lg p-2 hover:bg-slate-100"
                     >
@@ -274,6 +284,7 @@ export default function OrderDetailDrawer({ order, onClose }) {
                         {detail?.status === "PAID" && (
                             <>
                                 <button
+                                    type="button"
                                     onClick={handleHandover}
                                     className="flex-1 rounded-xl bg-sky-500 py-3 font-semibold text-white hover:bg-sky-600"
                                 >
@@ -281,6 +292,7 @@ export default function OrderDetailDrawer({ order, onClose }) {
                                 </button>
 
                                 <button
+                                    type="button"
                                     onClick={handleCancel}
                                     className="flex-1 rounded-xl bg-red-500 py-3 font-semibold text-white hover:bg-red-600"
                                 >
@@ -292,6 +304,7 @@ export default function OrderDetailDrawer({ order, onClose }) {
                         {/* SHIPPING */}
                         {detail?.status === "SHIPPING" && (
                             <button
+                                type="button"
                                 onClick={handleDelivered}
                                 className="flex-1 rounded-xl bg-emerald-500 py-3 font-semibold text-white hover:bg-emerald-600"
                             >
@@ -302,6 +315,7 @@ export default function OrderDetailDrawer({ order, onClose }) {
                         {/* DELIVERED */}
                         {detail?.status === "DELIVERED" && (
                             <button
+                                type="button"
                                 disabled
                                 className="flex-1 rounded-xl bg-slate-200 py-3 font-semibold text-slate-500 cursor-not-allowed"
                             >
@@ -312,6 +326,7 @@ export default function OrderDetailDrawer({ order, onClose }) {
                         {/* CANCELLED */}
                         {detail?.status === "CANCELLED" && (
                             <button
+                                type="button"
                                 disabled
                                 className="flex-1 rounded-xl bg-red-100 py-3 font-semibold text-red-500 cursor-not-allowed"
                             >

@@ -78,7 +78,7 @@ export default function OrderTable({ orders, onSelect }) {
                                 className="border-t transition hover:bg-slate-50"
                             >
 
-                                <td className="px-6 py-5 font-semibold text-emerald-600">
+                                <td className="px-6 py-5 font-semibold text-orange-600">
                                     #{order.id}
                                 </td>
 
@@ -110,8 +110,9 @@ export default function OrderTable({ orders, onSelect }) {
 
                                 <td className="px-6 py-5 text-center">
                                     <button
+                                        type="button"
                                         onClick={() => onSelect(order)}
-                                        className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2 text-white transition hover:bg-emerald-600"
+                                        className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-white transition hover:bg-orange-600"
                                     >
                                         <FiEye />
                                         Xem

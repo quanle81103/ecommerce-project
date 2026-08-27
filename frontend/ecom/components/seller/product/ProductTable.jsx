@@ -1,10 +1,8 @@
 import ProductRow from "./ProductRow";
 
-export default function ProductTable({ products, handleDelete }) {
-
-
+export default function ProductTable({ products, handleDelete, deletingId }) {
     return (
-        <table className="w-full table-fixed bg-white rounded-xl overflow-hidden shadow">
+        <div className="overflow-x-auto rounded-xl bg-white shadow"><table className="min-w-240 w-full table-fixed">
             <thead className="bg-gray-100">
                 <tr>
                     <th className="w-44 px-4 py-3 text-center">Ảnh</th>
@@ -22,9 +20,10 @@ export default function ProductTable({ products, handleDelete }) {
                         key={product.id}
                         product={product}
                         onDelete={handleDelete}
+                        deleting={deletingId === product.id}
                     />
                 ))}
             </tbody>
-        </table>
+        </table></div>
     );
 }

@@ -122,7 +122,7 @@ export default function TopProductTable({ products }) {
 
                                     </td>
 
-                                    <td className="px-6 py-5 text-right font-bold text-emerald-600">
+                                    <td className="px-6 py-5 text-right font-bold text-orange-600">
 
                                         {formatCurrency(product.revenue)}
 
@@ -135,7 +135,7 @@ export default function TopProductTable({ products }) {
                                             <div className="h-3 flex-1 overflow-hidden rounded-full bg-slate-200">
 
                                                 <div
-                                                    className="h-full rounded-full bg-emerald-500 transition-all duration-700"
+                                                    className="h-full rounded-full bg-orange-500 transition-all duration-700"
                                                     style={{
                                                         width: `${percent}%`
                                                     }}

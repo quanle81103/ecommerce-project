@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FiSearch, FiRefreshCw } from "react-icons/fi";
 import OrderTable from "../../components/seller/order/OrderTable";
 import OrderDetailDrawer from "../../components/seller/order/OrderDetailDrawer";
 import { getSellerOrders } from "../../services/sellerService";
+import { ErrorState } from "../../components/ui/Feedback";
 
 const TABS = [
     { label: "Tất cả", value: "ALL"},
@@ -18,35 +19,38 @@ export default function OrdersPage() {
     const [page, setPage] = useState(0);
     const [size] = useState(10);
     const [keyword, setKeyword] = useState("");
-    const [status, setStatus] = useState("");
+    const [draftKeyword, setDraftKeyword] = useState("");
+    const [status, setStatus] = useState("ALL");
     const [loading, setLoading] = useState(false);
     const [totalPages, setTotalPages] = useState(0);
     const [selectedOrder, setSelectedOrder] = useState(null);
+    const [error, setError] = useState("");
 
-    const loadOrders = async () => {
+    const loadOrders = useCallback(async () => {
         try {
             setLoading(true);
+            setError("");
             const response = await getSellerOrders({
                 page, size, status: status === "ALL" ? undefined : status, keyword: keyword || undefined
             });
-            console.log("Seller orders:", response);
             setOrders(response.content || []);
             setTotalPages(response.totalPages || 0);
-        } catch (error) {
-            console.log("Get seller orders error:",error);
+        } catch {
+            setOrders([]);
+            setError("Không thể tải danh sách đơn hàng.");
         } finally {
             setLoading(false);
         }
-    }
+    }, [page, size, status, keyword]);
 
     useEffect(() => {
         loadOrders();
-    }, [page, status]);
+    }, [loadOrders]);
 
     const handleSearch = (e) => {
         e.preventDefault();
         setPage(0);
-        loadOrders();
+        setKeyword(draftKeyword.trim());
     };
 
     const handleStatusChange = (newStatus) => {
@@ -58,7 +62,7 @@ export default function OrdersPage() {
         <div className="space-y-6">
             {/* header= */}
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
                 <div>
 
@@ -73,6 +77,7 @@ export default function OrdersPage() {
                 </div>
 
                 <button
+                    type="button"
                     onClick={loadOrders}
                     disabled={loading}
                     className="flex items-center gap-2 rounded-xl border bg-white px-4 py-2 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
@@ -86,12 +91,13 @@ export default function OrdersPage() {
 
             {/* ================= CONTENT ================= */}
 
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
 
                 {/*filter */}
                 <div className="mb-6 flex flex-wrap gap-3">
                     {TABS.map((tab) => (
                         <button
+                            type="button"
                             key={tab.value}
                             onClick={() =>
                                 handleStatusChange(tab.value)
@@ -99,7 +105,7 @@ export default function OrdersPage() {
                             className={`rounded-full px-5 py-2 text-sm font-medium transition
                                 ${
                                     status === tab.value
-                                        ? "bg-emerald-500 text-white"
+                                        ? "bg-orange-500 text-white"
                                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                 }
                             `}
@@ -121,12 +127,12 @@ export default function OrdersPage() {
                         />
                         <input
                             type="text"
-                            value={keyword}
+                            value={draftKeyword}
                             onChange={(e) =>
-                                setKeyword(e.target.value)
+                                setDraftKeyword(e.target.value)
                             }
                             placeholder="Tìm theo mã đơn hoặc tên khách hàng..."
-                            className="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 outline-none transition focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                            className="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
                         />
 
                     </div>
@@ -135,15 +141,16 @@ export default function OrdersPage() {
                 {/* table */}
                 {loading ? (
                     <div className="flex justify-center py-20">
-                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-emerald-500" />
+                        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-orange-500" />
                     </div>
-                ) : (<OrderTable orders={orders} onSelect={setSelectedOrder}/>)}
+                ) : error ? <ErrorState message={error} onRetry={loadOrders} /> : (<OrderTable orders={orders} onSelect={setSelectedOrder}/>)}
 
                 {/* pagination */}
                 {!loading && totalPages > 0 && (
                     <div className="mt-6 flex items-center justify-center gap-2">
 
                         <button
+                            type="button"
                             disabled={page === 0}
                             onClick={() =>
                                 setPage((prev) => prev - 1)
@@ -158,6 +165,7 @@ export default function OrdersPage() {
                         </span>
 
                         <button
+                            type="button"
                             disabled={page >= totalPages - 1}
                             onClick={() =>
                                 setPage((prev) => prev + 1)

@@ -1,40 +1,14 @@
 import { IoChatboxEllipsesOutline } from "react-icons/io5";
-import { useChat } from "../context/ChatContext";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
+import { useChat } from "../../../context/ChatContext";
 
-export default function ChatButton(){
-
-    const { isOpen, openChat } = useChat();
+export default function ChatButton() {
+    const navigate = useNavigate();
     const location = useLocation();
-
-    if (location.pathname.startsWith("/seller")) {
-        return null;
-    }
-    
-    if(isOpen) return null;
-
-    return (
-        <button
-            onClick={() => openChat(null)}
-            className="
-                fixed
-                bottom-0
-                right-16
-                w-32
-                h-12
-                bg-red-500
-                text-white
-                rounded-2xl
-                flex
-                items-center
-                justify-center
-                gap-2
-                hover:bg-red-600
-                transition
-            "
-        >
-            <IoChatboxEllipsesOutline size={20} />
-            <span>Chat</span>
-        </button>
-    );
+    const { isAuthenticated } = useAuth();
+    const { isOpen, openChat } = useChat();
+    if (location.pathname.startsWith("/seller") || isOpen) return null;
+    const handleOpen = () => isAuthenticated ? openChat(null) : navigate("/login?returnUrl=" + encodeURIComponent(location.pathname + location.search));
+    return <button type="button" aria-label="Mở hộp thoại tin nhắn" onClick={handleOpen} className="fixed bottom-4 right-4 z-30 inline-flex min-h-12 items-center gap-2 rounded-full bg-orange-500 px-5 font-semibold text-white shadow-xl transition hover:bg-orange-600 sm:bottom-6 sm:right-6"><IoChatboxEllipsesOutline size={21} /><span className="hidden sm:inline">Tin nhắn</span></button>;
 }

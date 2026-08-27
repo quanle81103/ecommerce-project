@@ -4,11 +4,11 @@ export default function DashboardHeader() {
     const navigate = useNavigate();
 
     return (
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 
             <div>
                 <h1 className="text-3xl font-bold">
-                    Dashboard
+                    Tổng quan
                 </h1>
 
                 <p className="text-gray-500 mt-2">
@@ -16,7 +16,7 @@ export default function DashboardHeader() {
                 </p>
             </div>
 
-            <button className="bg-emerald-500 text-white px-5 py-3 rounded-lg hover:bg-emerald-600" onClick={() => navigate("/seller/products/add")}>
+            <button type="button" className="primary-button sm:self-auto" onClick={() => navigate("/seller/products/add")}>
                 + Thêm sản phẩm
             </button>
 

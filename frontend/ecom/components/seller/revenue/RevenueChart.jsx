@@ -28,7 +28,7 @@ export default function RevenueChart({ data }) {
                         <XAxis dataKey="date"/>
                         <YAxis tickFormatter={(v) => `${(v/1000).toFixed(0)}k`}/>
                         <Tooltip formatter={(value) => formatMoney(value)}/>
-                        <Line type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} dot={{r: 5}} activeDot={{r: 8}}/>
+                        <Line type="monotone" dataKey="revenue" stroke="#f97316" strokeWidth={3} dot={{r: 5}} activeDot={{r: 8}}/>
                     </LineChart>
 
                 </ResponsiveContainer>

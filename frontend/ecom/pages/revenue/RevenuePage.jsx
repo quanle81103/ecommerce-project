@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import RevenueCard from "../../components/seller/revenue/RevenueCard";
 import RevenueChart from "../../components/seller/revenue/RevenueChart";
 import TopProductTable from "../../components/seller/revenue/TopProductTable";
 
 import {FiDollarSign, FiShoppingBag, FiUsers, FiPackage} from "react-icons/fi";
 import { getRevenueChartResponse, getRevenueResponse, getTopProductResponse } from "../../services/sellerService";
+import { ErrorState, LoadingState } from "../../components/ui/Feedback";
 
 export default function RevenuePage() {
 
@@ -12,38 +13,46 @@ export default function RevenuePage() {
     const [chartData, setChartData] = useState([]);
     const [topProducts, setTopProducts] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-    const loadData = async() => {
+    const loadData = useCallback(async() => {
         try {
             setLoading(true);
+            setError("");
 
             const [summaryRes, chartRes, productRes] = await Promise.all([getRevenueResponse(), getRevenueChartResponse(), getTopProductResponse()]);
             setSummary(summaryRes);
             setChartData(chartRes);
             setTopProducts(productRes);
-        } catch (error) {
-            console.log("Revenue Page error", error);
+        } catch {
+            setSummary(null);
+            setChartData([]);
+            setTopProducts([]);
+            setError("Không thể tải dữ liệu doanh thu.");
         } finally {
             setLoading(false);
         }
-    }
+    }, []);
 
     useEffect(() => {
         loadData();
-    },[]);
+    },[loadData]);
+
+    if (loading && !summary) return <LoadingState label="Đang tải báo cáo doanh thu..." />;
+    if (error) return <ErrorState message={error} onRetry={loadData} />;
 
     return(
 
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-3xl font-bold">Doanh thu</h1>
                     <p className="text-slate-500 mt-1">
                         Thống kê doanh thu cửa hàng
                     </p>
                 </div>
-                <button onClick={loadData} disabled={loading}
-                    className="rounded-xl bg-emerald-500 px-5 py-3 text-white hover:bg-emerald-600"
+                <button type="button" onClick={loadData} disabled={loading}
+                    className="primary-button"
                 >
                     {loading ? "Đang tải ...." : "Làm mới"}
                 </button>

@@ -1,27 +1,3 @@
-export default function ProductPriceInventory({ form, handleChange }){
-    return(
-        <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-xl font-semibold mb-5">
-                Giá & Kho
-            </h2>
-            <div className="grid grid-cols-2 gap-6">
-                <input
-                    type="number"
-                    name="price"
-                    value={form.price}
-                    onChange={handleChange}
-                    placeholder="Giá"
-                    className="border rounded-lg p-3"
-                />
-                <input
-                    type="number"
-                    name="inventory"
-                    value={form.inventory}
-                    onChange={handleChange}
-                    placeholder="Kho"
-                    className="border rounded-lg p-3"
-                />
-            </div>
-        </div>
-    );
+export default function ProductPriceInventory({ form, handleChange, errors }) {
+    return <section className="surface-card p-5 sm:p-6"><h2 className="text-xl font-bold">Giá và tồn kho</h2><div className="mt-5 grid gap-5 sm:grid-cols-2"><label className="text-sm font-semibold">Giá bán (VND)<input type="number" min="1" name="price" value={form.price} onChange={handleChange} className="field-control mt-2 font-normal" />{errors.price && <span className="mt-1 block font-normal text-red-600">{errors.price}</span>}</label><label className="text-sm font-semibold">Số lượng tồn kho<input type="number" min="0" name="inventory" value={form.inventory} onChange={handleChange} className="field-control mt-2 font-normal" />{errors.inventory && <span className="mt-1 block font-normal text-red-600">{errors.inventory}</span>}</label></div></section>;
 }
