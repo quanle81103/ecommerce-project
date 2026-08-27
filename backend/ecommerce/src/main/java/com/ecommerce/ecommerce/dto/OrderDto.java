@@ -16,7 +16,9 @@ public abstract class OrderDto {
 //        private LocalDateTime orderDate;
         private BigDecimal totalAmount;
         private String txnRef;
-
+        private String receiverName;
+        private String phone;
+        private String place;
         @Data
         @Builder
         public static class  Response {
@@ -32,6 +34,9 @@ public abstract class OrderDto {
         private Integer provinceId;
         private Integer districtId;
         private String wardCode;
+        private String receiverName;
+        private String phone;
+        private String place;
         private List<ShippingFeeRequest> shippingFees;
 
         @Data

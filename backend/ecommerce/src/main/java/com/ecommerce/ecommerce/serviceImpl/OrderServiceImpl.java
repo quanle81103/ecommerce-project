@@ -112,7 +112,7 @@ public class OrderServiceImpl implements OrderService {
         List<OrderDto.OrderResponse.Response> responses = orders.stream()
                 .map(order -> OrderDto.OrderResponse.Response.builder()
                         .id(order.getId()).totalAmount(order.getTotalAmount()).build()).toList();
-        return OrderDto.OrderResponse.builder().orders(responses).txnRef(payment.getTxnRef()).totalAmount(payment.getTotalAmount()).build();
+        return OrderDto.OrderResponse.builder().orders(responses).txnRef(payment.getTxnRef()).totalAmount(payment.getTotalAmount()).receiverName(payment.getUser().getFirstName() + ' ' + payment.getUser().getLastName()).phone(payment.getUser().getPhone()).place(payment.getUser().getPlace()).build();
     }
 
     private Map<Long, List<CartItem>> groupCartItemsByShop(Cart cart) {
@@ -131,6 +131,9 @@ public class OrderServiceImpl implements OrderService {
         order.setProvinceId(request.getProvinceId());
         order.setDistrictId(request.getDistrictId());
         order.setWardCode(request.getWardCode());
+        order.setReceiverName(request.getReceiverName());
+        order.setReceiverPhone(request.getPhone());
+        order.setPlace(request.getPlace());
         return order;
     }
 

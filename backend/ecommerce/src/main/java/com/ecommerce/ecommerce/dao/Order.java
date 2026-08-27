@@ -48,4 +48,8 @@ public class Order {
     private Integer provinceId;
     private Integer districtId;
     private String wardCode;
+
+    private String receiverName;
+    private String receiverPhone;
+    private String place;
 }
