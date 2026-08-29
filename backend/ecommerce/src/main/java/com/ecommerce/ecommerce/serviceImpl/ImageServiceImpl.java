@@ -28,21 +28,26 @@ public class ImageServiceImpl implements ImageService {
     private final ImageRepository imageRepository;
     private final ProductServiceImpl productServiceImpl;
     private final S3Client s3Client;
+    private final S3ServiceImpl s3Service;
 
     @Value("${aws.s3.bucket}")
     private String bucketName;
-
-    private String buildImageUrl(String key) {
-        return "https://" + bucketName + "s3.amazonaws.com/" + key;
-    }
 
     public Image getImageById(Long id) {
         return imageRepository.findById(id).orElseThrow(() -> new ResourceNotFound("Image with id [%s] not found".formatted(id)));
     }
 
+    private ImageDto.ImageResponse toResponse(Image image) {
+        return new ImageDto.ImageResponse(
+                image.getId(),
+                s3Service.getFileUrl(image.getImageKey()),
+                image.getProduct().getId()
+        );
+    }
+
     @Override
     public ImageDto.ImageResponse getImage(Long id) {
-        return MapperUtil.mapObject(getImageById(id), ImageDto.ImageResponse.class);
+        return toResponse(getImageById(id));
     }
 
     @Override
@@ -89,9 +94,10 @@ public class ImageServiceImpl implements ImageService {
 
         Image image = new Image();
         image.setProduct(MapperUtil.mapObject(productServiceImpl.getProductById(productId), Product.class));
-        image.setImageKey(buildImageUrl(path));
+        // Store only the S3 object key. The public URL is built when mapping the response.
+        image.setImageKey(path);
 
-        return MapperUtil.mapObject(imageRepository.save(image), ImageDto.ImageResponse.class);
+        return toResponse(imageRepository.save(image));
     }
 
     // Upload ảnh mới → Xóa ảnh cũ trên S3 → Update URL trong DB
