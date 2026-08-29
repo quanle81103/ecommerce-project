@@ -31,9 +31,8 @@ public class BannerServiceImpl {
     private BannerDto.BannerResponse uploadBannerImage(MultipartFile file, String folder) throws IOException {
         String path = s3Service.uploadFile(file, folder);
         Banner banner = new Banner();
-        LocalDateTime start = LocalDateTime.of(2026, 6, 23, 0, 0);
-        // end is 5 days after start
-        LocalDateTime end = start.plusDays(6);
+        LocalDateTime start = LocalDateTime.now();
+        LocalDateTime end = start.plusMonths(3);
         Integer maxOrder = bannerRepository.findMaxDisplayOrder();
         Image image = new Image();
         image.setImageKey(path);
