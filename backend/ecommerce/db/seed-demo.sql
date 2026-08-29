@@ -3,7 +3,7 @@
 -- Demo login password for all accounts below: Demo@123
 -- The stored value is a BCrypt hash, never a plaintext password.
 
-BEGIN;
+START TRANSACTION;
 
 INSERT INTO roles (role_status)
 SELECT seed.role_status
