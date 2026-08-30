@@ -10,7 +10,7 @@ export default function ProductCard({ product }) {
             <Link to={`/products/${product.id}`} className="block h-full">
                 <div className="relative aspect-square overflow-hidden bg-slate-100">
                     {image ? (
-                        <img src={image} alt={product?.name || "Sản phẩm"} loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+                        <img src={image} alt={product?.name || "Sản phẩm"} loading="lazy" className="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.08]" />
                     ) : (
                         <div className="grid h-full place-items-center px-4 text-center text-sm text-slate-400">Chưa có ảnh</div>
                     )}

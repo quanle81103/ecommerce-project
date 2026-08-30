@@ -41,13 +41,6 @@ export default function MainPage() {
                 )}
             </section>
 
-            <section className="app-container pb-8">
-                <div className="grid gap-4 rounded-2xl bg-white p-5 shadow-sm sm:grid-cols-3 sm:p-7">
-                    {[['Giao hàng tiện lợi', 'Theo dõi trạng thái đơn hàng rõ ràng.'], ['Thanh toán an toàn', 'Thanh toán trực tuyến qua VNPay.'], ['Hỗ trợ khách hàng', 'Đồng hành trong suốt quá trình mua sắm.']].map(([title, description]) => (
-                        <div key={title} className="rounded-xl border border-slate-100 p-4"><h2 className="font-bold">{title}</h2><p className="mt-1 text-sm text-slate-500">{description}</p></div>
-                    ))}
-                </div>
-            </section>
         </>
     );
 }
